@@ -472,15 +472,16 @@ html.opening-lock, html.opening-lock body { overflow: hidden; }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
 
 /* The pour, over everything: a few jellies, then a flood. A shade rises behind them so the change
-   underneath never shows through a gap; once they bury the screen the floor gives way and the heap
-   drops out of the bottom. */
+   underneath never shows through a gap while they pour. */
 .opening-pour { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .opening-shade { position: absolute; inset: 0; background: var(--bg-2); opacity: 0; }
 /* It stays down while the first few drop in front of the logo, and rises with the flood. */
 .opening.is-pouring .opening-shade { opacity: .92; transition: opacity 2s cubic-bezier(.42, 0, 1, 1) 1.8s; }
 .opening-pour .pour-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
-.opening.is-dropping .opening-pour { opacity: 0; transition: opacity .7s cubic-bezier(.5, 0, 1, .5); }
-.opening.is-dropping .pour-canvas { translate: 0 115%; transition: translate .7s cubic-bezier(.5, 0, 1, .5); }
+/* Once it's full the floor gives way and the heap falls out of the bottom, live (jelly-pit.js).
+   The shade behind it falls with it, its soft top edge following the top of the heap (--edge), so
+   the site shows from the top down where the heap has gone, never through it. */
+.opening.is-dropping .opening-shade { top: -160px; background: linear-gradient(rgba(16, 16, 19, 0), var(--bg-2) 160px); translate: 0 var(--edge, 0px); transition: none; }
 
 /* ---------- Tablets (an iPad upright) ----------
    Between the phone and the wide layouts the page stacks, as on a phone, but with room to spare:

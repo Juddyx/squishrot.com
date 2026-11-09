@@ -266,7 +266,8 @@
 
     // ---- one substep of the XPBD body ----
     integrate(dt) {
-      const gravity = -T.gravity * this.bodyH * (this.grab ? T.grabGravity : 1);
+      // `fall` makes it heavier (a heap dropping through the floor).
+      const gravity = -T.gravity * this.bodyH * (this.grab ? T.grabGravity : 1) * (this.fall || 1);
       const pull = this.grab ? 0 : (this.mood.pull + (this.huddle || 0)) * T.gravity * this.bodyH;
       const maxSpeed = T.maxSpeed * this.bodyH, pos = this.pos, prev = this.prev, vel = this.vel;
       for (let i = 0; i < RING * 2; i += 2) {
@@ -2417,6 +2418,8 @@
     }
     update(dt) {
       super.update(dt);
+      // Gone once it has fallen right out of the bottom.
+      if (this.dropping) for (const toy of this.toys) if (toy.spawned && toy.body.maxY < 0) { toy.spawned = false; toy.spawnTime = Infinity; }
       this.strained = this.stats.physicsMs >= PHYSICS_BUDGET * 0.8 ? this.strained + 1 : 0;
       const last = POUR_LEVELS.length - 1;
       if (this.level < last && this.toys.length > POUR_RUSH && this.toys[POUR_RUSH].spawned) this.setLevel(last);
@@ -2424,6 +2427,29 @@
     }
     // A flood has no middle to gather round.
     huddle(live) { for (const toy of live) toy.body.huddle = null; }
+    // The floor gives way: the heap falls out of the bottom together, live and a little heavier
+    // than usual, so its top sweeps down the screen and uncovers what's underneath from the top
+    // down, the jellies tumbling and jiggling against each other as it goes.
+    drop() {
+      this.dropping = true;
+      // Heavier the more jelly-heights the screen is tall, so it clears in about the same time on
+      // a phone as on a desktop (gravity goes by a jelly's own size).
+      const tall = clamp(this.H / this.size / 6.7, 1, 2);
+      for (const toy of this.toys) {
+        // Any still above the screen (the heap overflows it) go now, unseen, rather than rain in
+        // through the top behind the rest.
+        if (!toy.spawned || toy.body.minY > this.H) { toy.spawned = false; toy.spawnTime = Infinity; continue; }
+        const b = toy.body;
+        b.setWalls(this.W, this.H, -1e6, 2 + (toy.width * (1 - toy.solid)) / 2);
+        b.fall = 1.8 * tall;
+        this.stir(toy);
+        b.hop(unit() * 0.25, -(2.6 + 0.4 * Math.random()) * Math.sqrt(tall), 0);
+        b.spin(unit() * 1.2);
+      }
+    }
+    // Nothing settles while it falls.
+    rest(toy) { if (!this.dropping) super.rest(toy); }
+    get gone() { return !!this.dropping && !this.toys.some(t => t.spawned); }
     setLevel(level) {
       this.level = level;
       this.strained = 0;
@@ -2509,11 +2535,11 @@
       }
       return hidden / (rows * cols);
     }
-    // Full once they're all in and bury it: at the height of the flood, while the last are still
-    // raining down over the top (once they've landed the heap is lower). Soon after anyway.
+    // Full once they're all in and bury it, the last given a moment to land. Soon after anyway.
     get full() {
       if (!this.toys.length || !this.toys[this.toys.length - 1].spawned) return false;
-      return this.simTime >= this.lastSpawn + 0.8 || this.coverage() >= 0.86;
+      if (this.simTime >= this.lastSpawn + 1) return true;
+      return this.simTime >= this.lastSpawn + 0.25 && this.coverage() >= 0.86;
     }
   }
 
@@ -2527,7 +2553,7 @@
     // Without multisampling: the jellies' edges are their pictures' own soft alpha.
     const heap = new Pour({ hero: host, canvas, jellies, faces, srcFor, reduceMotion: false, antialias: false });
     window.squishPour = heap;                           // handy for checking the frame budget in the console
-    let running = false, started = false, stopped = false, last = 0, covered = null;
+    let running = false, started = false, stopped = false, last = 0, covered = null, dropped = null, edge = 0;
     // Built for the screen it pours over, so not before that has a size.
     const sized = () => host.clientWidth >= 100 && host.clientHeight >= 100;
     const ready = new Promise(resolve => {
@@ -2548,6 +2574,17 @@
       heap.draw(now / 1000);
       heap.stats.frames++;
       if (covered && heap.stats.frames % 3 === 0 && heap.full) { const done = covered; covered = null; done(); }
+      if (heap.dropping) {
+        // How far down the falling heap's top has come (CSS pixels from the top of the screen),
+        // never back up: the shade behind it follows (site.css), so the page shows from the top
+        // down only where the heap has gone. Its top taken a little below the highest few, so a
+        // jelly bouncing clear of the rest doesn't hold it up.
+        const tops = heap.toys.filter(t => t.spawned).map(t => t.body.maxY).sort((p, q) => q - p);
+        const top = tops.length ? tops[Math.floor(tops.length * 0.12)] : -heap.H;
+        edge = Math.max(edge, clamp(heap.H - top, 0, heap.H + 200));
+        host.style.setProperty('--edge', `${edge.toFixed(1)}px`);
+      }
+      if (dropped && heap.gone) { const done = dropped; dropped = null; done(); }
       requestAnimationFrame(frame);
     };
     const run = () => {
@@ -2569,7 +2606,11 @@
         run();
         return filled;
       },
-      // Holds the last frame, for the heap to drop away as a picture.
+      // The floor gives way; resolves once the last jelly has fallen out of the bottom.
+      drop() {
+        heap.drop();
+        return new Promise(resolve => { dropped = resolve; });
+      },
       stop() { stopped = true; running = false; },
       destroy() {
         stopped = true; running = false;

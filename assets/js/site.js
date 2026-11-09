@@ -150,12 +150,14 @@
 
   /* ---------------- opening: the app's first screen ---------------- */
   // The site opens as the app does (OnboardingView): the logo pops out of a star, and a tap pours
-  // every jelly down the screen until it's full (jelly-pit.js); the site takes over underneath and
-  // the heap drops away. `idle` resolves while the pour is built and nobody has asked for it yet
-  // (a quiet moment to build the hero's pile); `revealed` once the site has taken over.
+  // every jelly down the screen until it's full (jelly-pit.js); then the floor gives way and the
+  // heap falls out of the bottom, live, the site showing from the top down as it goes. `idle`
+  // resolves while the pour is built and nobody has asked for it yet (a quiet moment to build the
+  // hero's pile); `revealed` once the site has taken over; `cleared` once the falling heap has
+  // mostly cleared the screen (the hero's own jellies pour in then).
   function initOpening() {
     const html = document.documentElement, root = $('#opening'), now = Promise.resolve();
-    if (!root || !html.classList.contains('opening-on')) return { idle: now, revealed: now };
+    if (!root || !html.classList.contains('opening-on')) return { idle: now, revealed: now, cleared: now };
     const page = [$('.skip'), $('#nav'), $('#main')].filter(Boolean);
     page.forEach(el => { el.inert = true; });
     scrollTo(0, 0);
@@ -166,9 +168,10 @@
           srcFor: (id, finish, big) => jellySrc(id, finish, big ? 'full' : 'sm') })
       : null;
     const logo = initOpeningLogo(root);
-    let going = false, finished = false, revealSite, idleNow;
+    let going = false, finished = false, revealSite, idleNow, clearNow;
     const revealed = new Promise(resolve => { revealSite = resolve; });
     const idle = new Promise(resolve => { idleNow = resolve; });
+    const cleared = new Promise(resolve => { clearNow = resolve; });
     if (heap) heap.ready.then(() => { if (!going) idleNow(); });
 
     // The site takes over: under the heap as it drops away, or straight away.
@@ -190,6 +193,7 @@
       if (finished) return;
       root.classList.add('is-leaving');
       reveal();
+      clearNow();
       setTimeout(cleanUp, reduceMotion ? 0 : 400);
     };
     const go = async () => {
@@ -204,13 +208,17 @@
       root.classList.add('is-pouring');
       await heap.start();
       if (finished) return;
-      // Full: the site is underneath now. A moment, then the floor gives way.
+      // Full: the site is underneath now. A moment, then the floor gives way and the heap falls
+      // out of the bottom, live; the site shows round and above the jellies as they go, top first.
       root.classList.add('is-covered');
       await sleep(150);
-      heap.stop();
+      if (finished) return;
       root.classList.add('is-dropping');
+      const gone = heap.drop();
       reveal();
-      await sleep(760);
+      setTimeout(clearNow, 650);
+      await Promise.race([gone, sleep(2600)]);
+      clearNow();
       cleanUp();
     };
     const onKey = ev => {
@@ -545,9 +553,10 @@
     initCounts();
     initStore();
     // The hero waits for the opening: its pile builds in a quiet moment while the opening waits
-    // for a tap, and pours, as its headline rises, once the site shows.
+    // for a tap; its headline rises as the opening's heap falls away, and its own jellies pour in
+    // once that has mostly cleared the screen.
     const opening = initOpening();
-    Promise.race([opening.idle, opening.revealed]).then(() => initPit(opening.revealed));
+    Promise.race([opening.idle, opening.revealed]).then(() => initPit(opening.cleared));
     opening.revealed.then(initReveal);
     initClips();
     initJellies();
