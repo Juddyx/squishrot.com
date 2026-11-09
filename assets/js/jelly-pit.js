@@ -1842,6 +1842,12 @@
   }
 
   // ---------------------------------------------------------------------------------------
+  // One size for every jelly on the page, the opening's and the hero's alike (the visual size
+  // each gets, `commonSize`): about an eighth of the screen across, a fifth of a phone's width.
+  // The opening's flood needs them this big to bury a screen with no more than JavaScript can run.
+  function jellySize(width, height) { return clamp(0.13 * Math.sqrt(width * height), 56, 170); }
+
+  // ---------------------------------------------------------------------------------------
   // The pile: JellyPileScene, its inventory.
   const RANK = { common: 0, rare: 1, epic: 2, sketch: 3, shiny: 4, diamond: 5 };
   const COLOR = { common: [0.6, 0.8, 1], rare: [1, 0.55, 0.1], epic: [0.72, 0.28, 1], sketch: [0.96, 0.96, 0.96], shiny: [1, 0.36, 0.72], diamond: [0.68, 0.93, 1] };
@@ -1892,15 +1898,17 @@
       this.shadow = shadowCanvas();
     }
 
-    // The hero's room: wide, they pour in to the right of the headline; narrower, across the middle
-    // (bigger on a tablet than a phone).
+    // The hero's room: wide, they pour in to the right of the headline; narrower, across the middle.
     measure() {
       const hero = this.hero;
       this.W = hero.clientWidth;
       this.H = hero.clientHeight;
       this.floor = parseFloat(getComputedStyle(hero).getPropertyValue('--hero-floor')) || 60;
-      if (this.wide.matches) { this.zoneL = this.W * 0.44; this.zoneW = this.W - this.zoneL; this.size = clamp(this.zoneW * 0.14, 96, 140); }
-      else { this.zoneL = 0; this.zoneW = this.W; this.size = this.W >= 700 ? clamp(this.W * 0.15, 96, 132) : clamp(this.W * 0.22, 72, 100); }
+      if (this.wide.matches) { this.zoneL = this.W * 0.44; this.zoneW = this.W - this.zoneL; }
+      else { this.zoneL = 0; this.zoneW = this.W; }
+      // The same size as the opening's (each jelly is 0.81 of its slot), so the jellies that pour
+      // in after it are the ones that buried the screen.
+      this.size = jellySize(innerWidth, innerHeight) / 0.81;
       this.ratio = Math.min(2, window.devicePixelRatio || 1);
       if (this.gl) this.gl.resize(this.W, this.H, this.ratio);
       else { this.canvas.width = Math.round(this.W * this.ratio); this.canvas.height = Math.round(this.H * this.ratio); }
@@ -1929,7 +1937,7 @@
       this.measure();
       // About two rows' worth beside the headline; a little fewer across a narrower screen (a
       // tablet's, upright, has room for two rows under its copy).
-      const count = Math.round((this.zoneW / this.size) * (this.wide.matches ? 2.2 : this.W >= 700 ? 2 : 1.7));
+      const count = Math.round((this.zoneW / this.size) * (this.wide.matches ? 2.4 : this.W >= 700 ? 2.2 : 1.8));
       const commonSize = this.size * 0.81;
       await this.makeToys(this.pick(count), commonSize, commonSize * this.ratio * 1.35 > 220);
       const gap = Math.min(0.24, 2.5 / Math.max(1, this.toys.length));
@@ -2455,12 +2463,12 @@
       this.strained = 0;
       [this.substep, this.contactPasses] = POUR_LEVELS[level];
     }
-    // The whole screen, each jelly about an eighth of its size across (a fifth of a phone's width).
+    // The whole screen, each jelly the page's one size (jellySize).
     measure() {
       this.W = this.hero.clientWidth;
       this.H = this.hero.clientHeight;
       this.floor = POUR_FLOOR; this.zoneL = 0; this.zoneW = this.W;
-      this.size = clamp(0.13 * Math.sqrt(this.W * this.H), 56, 170);
+      this.size = jellySize(this.W, this.H);
       // A canvas the size of the screen, drawn a hundred times over each frame: kept to about
       // three million pixels, which is still twice over on a phone.
       this.ratio = Math.min(2, window.devicePixelRatio || 1, Math.sqrt(3e6 / Math.max(1, this.W * this.H)));
