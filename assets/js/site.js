@@ -153,8 +153,8 @@
   // every jelly down the screen until it's full (jelly-pit.js); then the floor gives way and the
   // heap falls out of the bottom, live, the site showing from the top down as it goes. `idle`
   // resolves while the pour is built and nobody has asked for it yet (a quiet moment to build the
-  // hero's pile); `revealed` once the site has taken over; `cleared` once the falling heap has
-  // mostly cleared the screen (the hero's own jellies pour in then).
+  // hero's pile); `revealed` once the site has taken over; `cleared` once the opening has gone
+  // altogether (the hero's own jellies drop in then, fresh, in plain sight).
   function initOpening() {
     const html = document.documentElement, root = $('#opening'), now = Promise.resolve();
     if (!root || !html.classList.contains('opening-on')) return { idle: now, revealed: now, cleared: now };
@@ -193,8 +193,7 @@
       if (finished) return;
       root.classList.add('is-leaving');
       reveal();
-      clearNow();
-      setTimeout(cleanUp, reduceMotion ? 0 : 400);
+      setTimeout(() => { cleanUp(); clearNow(); }, reduceMotion ? 0 : 400);
     };
     const go = async () => {
       if (going || finished) return;
@@ -216,10 +215,11 @@
       root.classList.add('is-dropping');
       const gone = heap.drop();
       reveal();
-      setTimeout(clearNow, 650);
       await Promise.race([gone, sleep(2600)]);
-      clearNow();
       cleanUp();
+      // The screen clear, a beat, then the hero's own jellies drop in.
+      await sleep(180);
+      clearNow();
     };
     const onKey = ev => {
       if (finished) return;
@@ -236,7 +236,7 @@
     $('.opening-skip', root).addEventListener('click', skip);
     if (window.openingTap === 'skip') skip();
     else if (window.openingTap) go();
-    return { idle, revealed };
+    return { idle, revealed, cleared };
   }
 
   // The logo is jelly too (SquishyLogo). A press squashes it under the finger, pulling stretches
@@ -553,8 +553,8 @@
     initCounts();
     initStore();
     // The hero waits for the opening: its pile builds in a quiet moment while the opening waits
-    // for a tap; its headline rises as the opening's heap falls away, and its own jellies pour in
-    // once that has mostly cleared the screen.
+    // for a tap; its headline rises as the opening's heap falls away, and its own jellies drop in
+    // once that has gone.
     const opening = initOpening();
     Promise.race([opening.idle, opening.revealed]).then(() => initPit(opening.cleared));
     opening.revealed.then(initReveal);
