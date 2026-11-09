@@ -2388,11 +2388,11 @@
   // faster and faster until all the rest flood down at once and bury the screen. Once it's full it
   // says so, and the page underneath takes over.
   const POUR_FIRST = 0.1, POUR_FLOOR = 18;
-  // When each drops in, after the first: long gaps that shrink fast, down to a flood of about 110
-  // a second.
+  // When each drops in, after the first: gaps that start long and shrink, down to a flood of about
+  // 60 a second.
   function pourDelay(index) {
-    let delay = 0, gap = 0.62;
-    for (let i = 0; i < index; i++) { delay += gap; gap = Math.max(0.009, gap * 0.76); }
+    let delay = 0, gap = 0.42;
+    for (let i = 0; i < index; i++) { delay += gap; gap = Math.max(0.016, gap * 0.8); }
     return delay;
   }
   // The first few drop in gently where they'll be watched, a little either side of the middle;
@@ -2483,7 +2483,7 @@
           y = b.cy + (b.bodyH + toy.height) / 2 + 2;
         }
       }
-      const speed = 2 + rush * (8 + 3 * Math.random());
+      const speed = 3 + rush * (4 + 2 * Math.random());
       toy.body.place(x, y, unit() * (20 + 25 * rush), -toy.height * speed, unit() * (0.12 + 0.18 * rush), unit() * (1.2 + 1.8 * rush));
       toy.spawned = true;
       toy.huddleLeft = HUDDLE_TIME;
