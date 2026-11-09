@@ -148,8 +148,9 @@ button { font: inherit; color: inherit; }
 .hero-hint.is-done { opacity: 0; }
 .hint-touch { display: none; }
 @media (hover: none) { .hint-desktop { display: none; } .hint-touch { display: inline; } }
-/* Wide, the jellies pile to the right of the headline: the glow and the hint sit under them. */
-@media (min-width: 900px) {
+/* Wide (and on its side), the jellies pile to the right of the headline: the glow and the hint
+   sit under them. Upright, however wide, they pile across the bottom under the copy. */
+@media (min-width: 900px) and (orientation: landscape) {
   .hero { padding-bottom: calc(var(--hero-floor) + 90px); }
   .hero-glow { left: 72%; width: min(1000px, 64vw); }
   .hero-hint { left: 44%; }
@@ -312,10 +313,11 @@ figure { margin: 0; }
 /* ---------- Sets ---------- */
 .set-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 58px; }
 .set-card { position: relative; overflow: hidden; min-height: 236px; padding: 24px 24px 22px; border-radius: 28px; background: radial-gradient(110% 90% at 100% 100%, rgba(255, 255, 255, .14), transparent 50%), linear-gradient(150deg, var(--c1), var(--c2)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .28), inset 0 0 0 1px rgba(255, 255, 255, .08), 0 22px 44px -22px rgba(0, 0, 0, .8); }
-.set-kind { font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; opacity: .82; }
+.set-kind { font-size: 12px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; opacity: .82; }
 .set-card h3 { max-width: 62%; margin: 8px 0 6px; font-size: 26px; letter-spacing: -.03em; }
 .set-desc { max-width: 58%; font-size: 14px; font-weight: 600; opacity: .88; line-height: 1.4; }
-.set-reward { display: inline-block; margin-top: 14px; padding: 5px 11px; border-radius: 999px; background: rgba(0, 0, 0, .24); font-size: 12.5px; font-weight: 800; }
+/* Kept to the text's side of the card, clear of the jelly: a long reward wraps there. */
+.set-reward { display: inline-block; max-width: 64%; margin-top: 14px; padding: 5px 11px; border-radius: 14px; background: rgba(0, 0, 0, .24); font-size: 12.5px; font-weight: 800; line-height: 1.4; text-wrap: balance; }
 .set-bar { width: 52%; height: 7px; margin-top: 20px; overflow: hidden; border-radius: 9px; background: rgba(0, 0, 0, .3); }
 .set-bar i { display: block; width: 0; height: 100%; border-radius: inherit; background: #fff; transition: width 1.3s var(--ease-out) .35s; }
 .set-card.in .set-bar i { width: var(--p); }
@@ -375,7 +377,7 @@ figure { margin: 0; }
 .footer { position: relative; z-index: 3; padding: 26px 0 calc(26px + env(safe-area-inset-bottom)); background: #0a0a0c; }
 .footer-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 28px; color: var(--dim); font-size: 14px; }
 .footer nav { display: flex; flex-wrap: wrap; gap: 6px 22px; }
-.footer a { padding: 8px 0; color: var(--muted); font-weight: 700; text-decoration: none; }
+.footer a { display: inline-flex; align-items: center; min-height: 44px; color: var(--muted); font-weight: 700; text-decoration: none; }
 .footer a:hover { color: var(--text); }
 
 /* ---------- Scroll reveal ---------- */
@@ -480,6 +482,25 @@ html.opening-lock, html.opening-lock body { overflow: hidden; }
 .opening.is-dropping .opening-pour { opacity: 0; transition: opacity .7s cubic-bezier(.5, 0, 1, .5); }
 .opening.is-dropping .pour-canvas { translate: 0 115%; transition: translate .7s cubic-bezier(.5, 0, 1, .5); }
 
+/* ---------- Tablets (an iPad upright) ----------
+   Between the phone and the wide layouts the page stacks, as on a phone, but with room to spare:
+   the hero's headline grows into it, and each feature reads as one centred composition (its
+   copy over a bigger phone) rather than a phone's left-hand column. (Not a phone on its side,
+   which is as wide but nowhere near as tall.) */
+@media (min-width: 641px) and (max-width: 899px) and (min-height: 600px) {
+  .hero-title { font-size: clamp(64px, 10.6vw, 100px); }
+  .hero-sub { max-width: 30em; font-size: 21px; }
+  .split-row > .copy { max-width: 36em; margin-inline: auto; text-align: center; }
+  .split-row > .copy .lede { margin-inline: auto; }
+  .split-row > .copy .tiles, .split-row > .copy .checks { width: fit-content; max-width: 100%; margin-inline: auto; text-align: left; }
+  .phone { --w: clamp(280px, 39vw, 340px); }
+}
+/* A big tablet upright (an iPad Pro) keeps two columns below the hero, but its hero stacks. */
+@media (min-width: 900px) and (orientation: portrait) {
+  .hero-title { font-size: clamp(64px, 10.6vw, 112px); }
+  .hero-sub { max-width: 30em; font-size: 21px; }
+}
+
 /* ---------- Small screens ---------- */
 @media (max-width: 640px) {
   :root { --nav-h: 64px; --hero-floor: 48px; }
@@ -492,6 +513,10 @@ html.opening-lock, html.opening-lock body { overflow: hidden; }
   .tile-num { width: 58px; height: 58px; border-radius: 17px; font-size: 17px; }
   .jelly-btn--sm { padding: 0 16px; font-size: 14px; }
   .set-card h3 { font-size: 23px; }
+  /* A jelly's finishes in one row of four; five in two centred rows, three and two. */
+  .finishes { gap: 6px; }
+  .finishes .chip { height: 40px; padding: 0 12px; font-size: 13px; }
+  .finishes:has(.chip:nth-child(5)) { max-width: 250px; margin-inline: auto; }
 }
 
 /* ---------- Reduced motion ---------- */

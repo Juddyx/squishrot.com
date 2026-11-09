@@ -1891,14 +1891,15 @@
       this.shadow = shadowCanvas();
     }
 
-    // The hero's room: wide, they pour in to the right of the headline; narrower, across the middle.
+    // The hero's room: wide, they pour in to the right of the headline; narrower, across the middle
+    // (bigger on a tablet than a phone).
     measure() {
       const hero = this.hero;
       this.W = hero.clientWidth;
       this.H = hero.clientHeight;
       this.floor = parseFloat(getComputedStyle(hero).getPropertyValue('--hero-floor')) || 60;
       if (this.wide.matches) { this.zoneL = this.W * 0.44; this.zoneW = this.W - this.zoneL; this.size = clamp(this.zoneW * 0.14, 96, 140); }
-      else { this.zoneL = 0; this.zoneW = this.W; this.size = this.W >= 700 ? clamp(this.W * 0.13, 88, 112) : clamp(this.W * 0.22, 72, 100); }
+      else { this.zoneL = 0; this.zoneW = this.W; this.size = this.W >= 700 ? clamp(this.W * 0.15, 96, 132) : clamp(this.W * 0.22, 72, 100); }
       this.ratio = Math.min(2, window.devicePixelRatio || 1);
       if (this.gl) this.gl.resize(this.W, this.H, this.ratio);
       else { this.canvas.width = Math.round(this.W * this.ratio); this.canvas.height = Math.round(this.H * this.ratio); }
@@ -1925,8 +1926,9 @@
 
     async build() {
       this.measure();
-      // About two rows' worth beside the headline; a little fewer across a narrower screen.
-      const count = Math.round((this.zoneW / this.size) * (this.wide.matches ? 2.2 : 1.7));
+      // About two rows' worth beside the headline; a little fewer across a narrower screen (a
+      // tablet's, upright, has room for two rows under its copy).
+      const count = Math.round((this.zoneW / this.size) * (this.wide.matches ? 2.2 : this.W >= 700 ? 2 : 1.7));
       const commonSize = this.size * 0.81;
       await this.makeToys(this.pick(count), commonSize, commonSize * this.ratio * 1.35 > 220);
       const gap = Math.min(0.24, 2.5 / Math.max(1, this.toys.length));
@@ -2589,7 +2591,8 @@
     canvas.className = 'pit-canvas';
     canvas.setAttribute('aria-hidden', 'true');
     pit.appendChild(canvas);
-    const pile = new Pile({ hero, canvas, hint, jellies, faces, srcFor, reduceMotion, wide: matchMedia('(min-width: 900px)') });
+    // Beside the headline only on a wide screen on its side (site.css's hero layout).
+    const pile = new Pile({ hero, canvas, hint, jellies, faces, srcFor, reduceMotion, wide: matchMedia('(min-width: 900px) and (orientation: landscape)') });
     window.squishPit = pile;                            // handy for checking the frame budget in the console
     let started = false, ready = false, running = false, visible = false, last = 0, held = !!holdUntil;
     if (holdUntil) holdUntil.then(() => { held = false; wake(); });
