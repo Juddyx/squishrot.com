@@ -188,6 +188,13 @@
       root.remove();
       html.classList.remove('opening-on');
       removeEventListener('keydown', onKey);
+      toSection();
+    };
+    // Arrived by a link to a section: there, once the opening is over.
+    const toSection = () => {
+      let target = null;
+      try { target = location.hash.length > 1 && document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (e) { /* not an id */ }
+      if (target && target.id !== 'top') target.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
     };
     const skip = () => {
       if (finished) return;

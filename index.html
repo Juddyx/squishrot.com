@@ -13,13 +13,14 @@
       probe.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAE1pUHJhdmlmbWlhZm1pZjEAAAHobWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAAOcGl0bQAAAAAAAQAAAE1paW5mAAAAAAADAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAFWluZmUCAAABAAIAAGF2MDEAAAAAFWluZmUCAAABAAMAAEV4aWYAAAAAKGlyZWYAAAAAAAAADmF1eGwAAgABAAEAAAAOY2RzYwADAAEAAQAAANppcHJwAAAAsWlwY28AAAATY29scm5jbHgAAgACAAaAAAAADGNsbGkAywBAAAAAFGlzcGUAAAAAAAAAAgAAAAIAAAAJaXJvdAAAAAAQcGl4aQAAAAADCAgIAAAADnBpeGkAAAAAAQgAAAA3YXV4QwAAAAB1cm46bXBlZzpoZXZjOjIwMTU6YXV4aWQ6MQAAAAAMAAAACE4BpQQAAf5AAAAADGF2MUOBAAwAAAAADGF2MUOBABwAAAAAIWlwbWEAAAAAAAAAAgABBoECAwWIhAACBQMGh4mEAAAAOmlsb2MAAAAARAAAAwABAAAAAQAAAmYAAAApAAIAAAABAAACjwAAAB0AAwAAAAEAAAIYAAAATgAAAAFtZGF0AAAAAAAAAKQAAAAGRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAAqADAAQAAAABAAAAAgAAAAASAAoMAAAAAAZ//AgQEDQgMhcQAZIACCCCIADb235ba5xLJkSGy4OYkRIACggAAAAABn/8FTIPEAGOACCIArFiH7QUuqOu';
     });
     document.documentElement.classList.add('js'); document.documentElement.lang = 'en';
-    /* The opening (the app's first screen) plays on arriving, not on coming back from another
-       page of the site or following a link to a section. */
+    /* The opening (the app's first screen) is the first thing on every visit and reload. Only
+       coming back from the site's own Privacy, Terms or Support page, or going back in history,
+       skips it. (A link to a section plays it too, then scrolls there.) */
     (function () {
       try {
-        var ref = document.referrer, fromHere = false, nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
-        try { fromHere = !!ref && new URL(ref).origin === location.origin; } catch (e) {}
-        if (location.hash || fromHere || (nav && nav.type === 'back_forward')) return;
+        var ref = document.referrer, fromPage = false, nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+        try { var from = new URL(ref); fromPage = from.origin === location.origin && /(privacy|terms|support)(\.html)?$/.test(from.pathname); } catch (e) {}
+        if (fromPage || (nav && nav.type === 'back_forward')) return;
         document.documentElement.classList.add('opening-on', 'opening-lock');
         /* The site starts at the top under it, whatever the browser remembers. */
         if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
