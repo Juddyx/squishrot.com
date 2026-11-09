@@ -447,6 +447,9 @@ html.opening-lock, html.opening-lock body { overflow: hidden; }
 /* The logo bursts up out of the star, squashes as it lands, then breathes. */
 .opening-logo { position: absolute; left: 0; top: 0; width: calc(var(--logo-h) * 3); height: var(--logo-h); translate: -50% -50%; }
 .opening-pop, .opening-breath, .opening-poke, .opening-tilt { width: 100%; height: 100%; }
+/* Crushed flat on its baseline under the jellies piled on it, and gone. */
+.opening-logo.is-crushed { transform-origin: 50% 82%; animation: opening-crush .34s cubic-bezier(.5, 0, 1, .5) forwards; }
+@keyframes opening-crush { 0% { transform: none; opacity: 1; } 40% { transform: scale(1.16, .6); opacity: 1; } 100% { transform: scale(1.34, .06); opacity: 0; } }
 .opening-pop { opacity: 0; scale: .15; animation: opening-pop .4s cubic-bezier(.34, 1.36, .64, 1) .7s forwards, opening-show .1s linear .7s forwards, opening-squash 1s linear 1.1s forwards; }
 @keyframes opening-pop { to { scale: 1; } }
 @keyframes opening-show { to { opacity: 1; } }

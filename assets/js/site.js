@@ -163,11 +163,13 @@
     scrollTo(0, 0);
     try { root.focus({ preventScroll: true }); } catch (e) { /* focus is a courtesy */ }
     const opened = window.openingStart || performance.now();
+    const logo = initOpeningLogo(root);
+    // A jelly landing hard on the logo squishes it there.
     const heap = !reduceMotion && window.SquishPit && window.SquishPit.pour
       ? window.SquishPit.pour({ host: $('.opening-pour', root), jellies: S.jellies, faces: S.faces || {},
-          srcFor: (id, finish, big) => jellySrc(id, finish, big ? 'full' : 'sm') })
+          srcFor: (id, finish, big) => jellySrc(id, finish, big ? 'full' : 'sm'), onGroundHit: (x, speed) => logo.bump(x, speed),
+          onGroundGone: () => logo.crush() })
       : null;
-    const logo = initOpeningLogo(root);
     let going = false, finished = false, revealSite, idleNow, clearNow;
     const revealed = new Promise(resolve => { revealSite = resolve; });
     const idle = new Promise(resolve => { idleNow = resolve; });
@@ -211,6 +213,12 @@
       const wait = opened + 900 - performance.now();
       if (wait > 0) await sleep(wait);
       if (finished) return;
+      // The logo is ground: the jellies land on its letters, bounce and roll off them.
+      const img = $('.opening-logo img', root), box = $('.opening-logo', root), host = $('.opening-pour', root);
+      if (img && img.complete && img.naturalWidth && box && host) {
+        const r = box.getBoundingClientRect(), h = host.getBoundingClientRect();
+        heap.setGround(img, { left: r.left - h.left, top: r.top - h.top, width: r.width, height: r.height });
+      }
       root.classList.add('is-pouring');
       await heap.start();
       if (finished) return;
@@ -252,7 +260,7 @@
   function initOpeningLogo(root) {
     const box = $('.opening-logo', root), poke = $('.opening-poke', root), tilt = $('.opening-tilt', root);
     let pulled = false;
-    if (!box || !poke || !tilt || reduceMotion) return { stop() {}, pulled: () => false };
+    if (!box || !poke || !tilt || reduceMotion) return { stop() {}, pulled: () => false, bump() {}, crush() {} };
     const lean = [0, 0], leanTo = [0, 0];
     let raf = 0, live = true, held = null, release = null;
     const wobble = (s, amount, frequency, damping) => (s > 0 ? amount * Math.exp(-damping * s) * Math.cos(frequency * s) : 0);
@@ -280,7 +288,7 @@
         s = shape(held.x, held.dx, held.dy, Math.min(1, (now - held.at) / 120), 1);
         moving = true;
       } else if (release) {
-        const since = (now - release.at) / 1000, jiggle = wobble(since, 1, 11, 4);
+        const since = (now - release.at) / 1000, jiggle = wobble(since, release.k || 1, 11, 4);
         s = shape(release.x, release.dx, release.dy, 1, jiggle);
         // A little bounce of its own even after a plain tap.
         s.sx += 0.06 * jiggle;
@@ -324,9 +332,21 @@
     root.addEventListener('pointerleave', ev => {
       if (ev.pointerType === 'mouse') { leanTo[0] = leanTo[1] = 0; kick(); }
     });
+    let bumped = 0;
     return {
       stop() { live = false; cancelAnimationFrame(raf); },
       pulled: () => pulled,
+      // A jelly landing on it (x across it, 0 to 1): squashed where it lands and jiggling back,
+      // the harder it hit the more; not while a finger holds it, nor more than every 120 ms.
+      bump(x, speed) {
+        const now = performance.now();
+        if (!live || held || now - bumped < 120) return;
+        bumped = now;
+        release = { x: clamp(x, 0, 1) * box.getBoundingClientRect().width, dx: 0, dy: 0, at: now, k: clamp(speed / 10, 0.3, 1) };
+        kick();
+      },
+      // Crushed flat under the jellies piled on it (site.css), and gone.
+      crush() { box.classList.add('is-crushed'); },
     };
   }
 

@@ -36,7 +36,7 @@
     renderSmoothing: 3, breathAmount: 0.008, breathPeriod: 3.4,
     trailFrom: 7, trailCount: 4, trailDuration: 0.03,
   };
-  const FLOOR = 1, CEILING = 2, LEFT = 4, RIGHT = 8;
+  const FLOOR = 1, CEILING = 2, LEFT = 4, RIGHT = 8, GROUND = 16;
 
   // Which column and row of the artwork grid each ring particle sits on: counter-clockwise
   // from the bottom-left corner.
@@ -95,6 +95,8 @@
       this.squeeze = 0; this.firmness = 0; this.touch = null; this.grab = null; this.isTouching = false;
       this.bodyW = 1; this.bodyH = 1; this.overhang = 1;
       this.supported = false; this.supportNext = false; this.huddle = null;
+      // `ground`: a shape it lands on besides the floor (the opening's logo), and its last hard landing there.
+      this.ground = null; this.groundHit = 0; this.groundHitX = 0;
       this.floorY = 0; this.ceilingY = 0; this.leftX = 0; this.rightX = 0; this.ceilingActive = false;
       this.dentsSettled = true; this.elapsed = 0;
       this.pressExpression = 0; this.reactionRemaining = 0;
@@ -374,6 +376,26 @@
           y = this.ceilingY;
           touched |= CEILING;
         }
+        // The ground shape: out through the nearer of its top and bottom, the top along its slope.
+        const g = this.ground;
+        if (g && x > g.x0 && x < g.x1 && y > g.y0 && y < g.y1) {
+          const c = Math.min(g.n - 1, ((x - g.x0) / g.dx) | 0), top = g.top[c], bottom = g.bottom[c];
+          if (top > bottom && y < top && y > bottom) {
+            if (top - y <= y - bottom) {
+              const nx = g.nx[c], ny = g.ny[c], v = ((lx - x) * nx + (ly - y) * ny) / dt;
+              if (v > bestSpeed) { bestSpeed = v; bestNx = nx; bestNy = ny; bestWall = GROUND; bestIndex = i; }
+              x = slide(x, lx, top - y);
+              y = top;
+              this.supportNext = true;
+            } else {
+              const v = (y - ly) / dt;
+              if (v > bestSpeed) { bestSpeed = v; bestNx = 0; bestNy = -1; bestWall = GROUND; bestIndex = i; }
+              x = slide(x, lx, y - bottom);
+              y = bottom;
+            }
+            touched |= GROUND;
+          }
+        }
         if (x < this.leftX) {
           const v = (lx - x) / dt;
           if (v > bestSpeed) { bestSpeed = v; bestNx = 1; bestNy = 0; bestWall = LEFT; bestIndex = i; }
@@ -390,6 +412,10 @@
         pos[2 * i] = x; pos[2 * i + 1] = y;
       }
       this.contactsNext |= touched;
+      if (bestWall === GROUND && (this.contacts & GROUND) === 0 && bestSpeed > this.groundHit) {
+        this.groundHit = bestSpeed;
+        this.groundHitX = pos[2 * bestIndex];
+      }
       // Only a fresh contact counts as an impact.
       if (bestSpeed > this.hitSpeed && (this.contacts & bestWall) === 0) {
         this.hitSpeed = bestSpeed; this.hitNx = bestNx; this.hitNy = bestNy; this.impactFrom = null;
@@ -2415,6 +2441,43 @@
   // app's. A device still short of time steps down sooner.
   const POUR_LEVELS = [[1 / 480, 2], [1 / 240, 2], [1 / 160, 1]];
 
+  // The opening's logo as ground: the top and bottom of its letters column by column, read from
+  // the picture's own alpha, so jellies land on the word itself and roll off its rounded ends.
+  // `rect` is where it shows (CSS pixels from the host's top left); `height`, the host's.
+  function logoGround(img, rect, height) {
+    const n = 120, rows = 60, canvas = document.createElement('canvas');
+    canvas.width = n; canvas.height = rows;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0, n, rows);
+    const px = ctx.getImageData(0, 0, n, rows).data;
+    const raw = new Float64Array(n), top = new Float64Array(n), bottom = new Float64Array(n), nx = new Float64Array(n), ny = new Float64Array(n);
+    let y0 = Infinity, y1 = -Infinity;
+    for (let c = 0; c < n; c++) {
+      let first = -1, last = -1;
+      for (let r = 0; r < rows; r++) if (px[(r * n + c) * 4 + 3] > 110) { if (first < 0) first = r; last = r; }
+      if (first < 0) { raw[c] = NaN; top[c] = -Infinity; bottom[c] = Infinity; continue; }
+      raw[c] = height - (rect.top + (first / rows) * rect.height);           // y up, as the scene's
+      bottom[c] = height - (rect.top + ((last + 1) / rows) * rect.height);
+      y0 = Math.min(y0, bottom[c]);
+    }
+    const dx = rect.width / n;
+    for (let c = 0; c < n; c++) {
+      if (Number.isNaN(raw[c])) continue;
+      // A little smoothed, so a jelly doesn't catch on a pixel step.
+      let sum = 0, k = 0;
+      for (let d = -1; d <= 1; d++) if (c + d >= 0 && c + d < n && !Number.isNaN(raw[c + d])) { sum += raw[c + d]; k++; }
+      top[c] = sum / k;
+      y1 = Math.max(y1, top[c]);
+    }
+    for (let c = 0; c < n; c++) {
+      if (!(top[c] > bottom[c])) continue;
+      const a = c > 0 && top[c - 1] > bottom[c - 1] ? top[c - 1] : top[c], b = c < n - 1 && top[c + 1] > bottom[c + 1] ? top[c + 1] : top[c];
+      const slope = (b - a) / (2 * dx), length = Math.hypot(slope, 1);
+      nx[c] = -slope / length; ny[c] = 1 / length;
+    }
+    return { x0: rect.left, x1: rect.left + rect.width, y0, y1, n, dx, top, bottom, nx, ny };
+  }
+
   class Pour extends Pile {
     constructor(options) {
       super(options);
@@ -2426,6 +2489,26 @@
     }
     update(dt) {
       super.update(dt);
+      // Most of the way through the flood the logo gives under the mound on it: no longer ground,
+      // so the heap fills in under where it was and buries the screen.
+      if (this.ground && this.simTime >= this.crushAt) {
+        this.ground = null;
+        for (const toy of this.toys) toy.body.ground = null;
+        if (this.onGroundGone) this.onGroundGone();
+      }
+      // A hard landing on the logo, reported (the strongest a frame) so the logo can squish there.
+      if (this.ground) {
+        let best = null;
+        for (const toy of this.toys) {
+          const b = toy.body;
+          if (b.groundHit > 0) {
+            const speed = b.groundHit / b.bodyH;
+            if (speed > 2.5 && (!best || speed > best.speed)) best = { x: (b.groundHitX - this.ground.x0) / (this.ground.x1 - this.ground.x0), speed };
+            b.groundHit = 0;
+          }
+        }
+        if (best && this.onGroundHit) this.onGroundHit(best.x, best.speed);
+      }
       // Gone once it has fallen right out of the bottom.
       if (this.dropping) for (const toy of this.toys) if (toy.spawned && toy.body.maxY < 0) { toy.spawned = false; toy.spawnTime = Infinity; }
       this.strained = this.stats.physicsMs >= PHYSICS_BUDGET * 0.8 ? this.strained + 1 : 0;
@@ -2440,6 +2523,7 @@
     // down, the jellies tumbling and jiggling against each other as it goes.
     drop() {
       this.dropping = true;
+      this.ground = null;
       // Heavier the more jelly-heights the screen is tall, so it clears in about the same time on
       // a phone as on a desktop (gravity goes by a jelly's own size).
       const tall = clamp(this.H / this.size / 6.7, 1, 2);
@@ -2449,6 +2533,7 @@
         if (!toy.spawned || toy.body.minY > this.H) { toy.spawned = false; toy.spawnTime = Infinity; continue; }
         const b = toy.body;
         b.setWalls(this.W, this.H, -1e6, 2 + (toy.width * (1 - toy.solid)) / 2);
+        b.ground = null;
         b.fall = 1.8 * tall;
         this.stir(toy);
         b.hop(unit() * 0.25, -(2.6 + 0.4 * Math.random()) * Math.sqrt(tall), 0);
@@ -2493,6 +2578,7 @@
       const count = clamp(Math.round((2 * this.W * this.H) / (this.size * this.size)), 70, 150);
       await this.makeToys(this.pick(count), this.size, this.size * this.ratio > 300);
       this.toys.forEach((toy, i) => { toy.spawnTime = POUR_FIRST + pourDelay(i); });
+      this.crushAt = POUR_FIRST + pourDelay(Math.round(this.toys.length * 0.7));
       this.lastSpawn = this.toys.length ? this.toys[this.toys.length - 1].spawnTime : 0;
       this.built = true;
     }
@@ -2521,6 +2607,7 @@
       }
       const speed = 3 + rush * (4 + 2 * Math.random());
       toy.body.place(x, y, unit() * (20 + 25 * rush), -toy.height * speed, unit() * (0.12 + 0.18 * rush), unit() * (1.2 + 1.8 * rush));
+      toy.body.ground = this.ground;
       toy.spawned = true;
       toy.huddleLeft = HUDDLE_TIME;
     }
@@ -2553,13 +2640,15 @@
 
   // The pour over `host` (the whole screen). Built (loaded, unseen) ahead, so starting it only
   // sets it going; `start()` resolves once the heap has filled the screen.
-  function pour({ host, jellies, faces, srcFor }) {
+  // `onGroundHit(x, speed)`: a jelly landing hard on the logo (x across it, 0 to 1; speed in its
+  // heights a second). `onGroundGone()`: the logo giving way under the flood.
+  function pour({ host, jellies, faces, srcFor, onGroundHit, onGroundGone }) {
     const canvas = document.createElement('canvas');
     canvas.className = 'pour-canvas';
     canvas.setAttribute('aria-hidden', 'true');
     host.appendChild(canvas);
     // Without multisampling: the jellies' edges are their pictures' own soft alpha.
-    const heap = new Pour({ hero: host, canvas, jellies, faces, srcFor, reduceMotion: false, antialias: false });
+    const heap = new Pour({ hero: host, canvas, jellies, faces, srcFor, onGroundHit, onGroundGone, reduceMotion: false, antialias: false });
     window.squishPour = heap;                           // handy for checking the frame budget in the console
     let running = false, started = false, stopped = false, last = 0, covered = null, dropped = null, edge = 0;
     // Built for the screen it pours over, so not before that has a size.
@@ -2613,6 +2702,12 @@
         const filled = new Promise(resolve => { covered = resolve; });
         run();
         return filled;
+      },
+      // The logo as ground the jellies land on (`rect`: where it shows, CSS pixels from the host's
+      // top left).
+      setGround(img, rect) {
+        try { heap.ground = logoGround(img, rect, host.clientHeight); } catch (e) { heap.ground = null; }
+        return !!heap.ground;
       },
       // The floor gives way; resolves once the last jelly has fallen out of the bottom.
       drop() {
