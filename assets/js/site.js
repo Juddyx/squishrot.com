@@ -139,13 +139,180 @@
   /* ---------------- hero: the inventory's jelly pile ---------------- */
   // The app's own jellies, moving exactly as they do in its inventory: its soft bodies, their
   // pile, their lives and its face shader, ported in assets/js/jelly-pit.js.
-  function initPit() {
+  function initPit(holdUntil) {
     const hero = $('.hero'), pit = $('#pit');
     if (!hero || !pit || !window.SquishPit) return;
     window.SquishPit.start({
-      hero, pit, hint: $('.hero-hint'), jellies: S.jellies, faces: S.faces || {}, reduceMotion,
+      hero, pit, hint: $('.hero-hint'), jellies: S.jellies, faces: S.faces || {}, reduceMotion, holdUntil,
       srcFor: (id, finish, big) => jellySrc(id, finish, big ? 'full' : 'sm'),
     });
+  }
+
+  /* ---------------- opening: the app's first screen ---------------- */
+  // The site opens as the app does (OnboardingView): the logo pops out of a star, and a tap pours
+  // every jelly down the screen until it's full (jelly-pit.js); the site takes over underneath and
+  // the heap drops away. `idle` resolves while the pour is built and nobody has asked for it yet
+  // (a quiet moment to build the hero's pile); `revealed` once the site has taken over.
+  function initOpening() {
+    const html = document.documentElement, root = $('#opening'), now = Promise.resolve();
+    if (!root || !html.classList.contains('opening-on')) return { idle: now, revealed: now };
+    const page = [$('.skip'), $('#nav'), $('#main')].filter(Boolean);
+    page.forEach(el => { el.inert = true; });
+    scrollTo(0, 0);
+    try { root.focus({ preventScroll: true }); } catch (e) { /* focus is a courtesy */ }
+    const opened = window.openingStart || performance.now();
+    const heap = !reduceMotion && window.SquishPit && window.SquishPit.pour
+      ? window.SquishPit.pour({ host: $('.opening-pour', root), jellies: S.jellies, faces: S.faces || {},
+          srcFor: (id, finish, big) => jellySrc(id, finish, big ? 'full' : 'sm') })
+      : null;
+    const logo = initOpeningLogo(root);
+    let going = false, finished = false, revealSite, idleNow;
+    const revealed = new Promise(resolve => { revealSite = resolve; });
+    const idle = new Promise(resolve => { idleNow = resolve; });
+    if (heap) heap.ready.then(() => { if (!going) idleNow(); });
+
+    // The site takes over: under the heap as it drops away, or straight away.
+    const reveal = () => {
+      if (finished) return;
+      finished = true;
+      html.classList.remove('opening-lock');
+      page.forEach(el => { el.inert = false; });
+      revealSite();
+    };
+    const cleanUp = () => {
+      logo.stop();
+      if (heap) heap.destroy();
+      root.remove();
+      html.classList.remove('opening-on');
+      removeEventListener('keydown', onKey);
+    };
+    const skip = () => {
+      if (finished) return;
+      root.classList.add('is-leaving');
+      reveal();
+      setTimeout(cleanUp, reduceMotion ? 0 : 400);
+    };
+    const go = async () => {
+      if (going || finished) return;
+      going = true;
+      root.classList.add('is-going');
+      if (!heap || !(await heap.ready)) { skip(); return; }
+      // Not before the logo has popped out of the star.
+      const wait = opened + 900 - performance.now();
+      if (wait > 0) await sleep(wait);
+      if (finished) return;
+      root.classList.add('is-pouring');
+      await heap.start();
+      if (finished) return;
+      // Full: the site is underneath now. A moment, then the floor gives way.
+      root.classList.add('is-covered');
+      await sleep(150);
+      heap.stop();
+      root.classList.add('is-dropping');
+      reveal();
+      await sleep(760);
+      cleanUp();
+    };
+    const onKey = ev => {
+      if (finished) return;
+      if (ev.key === 'Escape') { ev.preventDefault(); skip(); }
+      else if (['Enter', ' ', 'ArrowDown', 'PageDown'].includes(ev.key) && !ev.target.closest('.opening-skip')) { ev.preventDefault(); go(); }
+    };
+    addEventListener('keydown', onKey);
+    // A tap anywhere (a pull on the logo is only play), or a scroll, starts it.
+    root.addEventListener('pointerup', ev => {
+      if (ev.button > 0 || ev.target.closest('.opening-skip') || logo.pulled()) return;
+      go();
+    });
+    root.addEventListener('wheel', ev => { if (Math.abs(ev.deltaY) > 2) go(); }, { passive: true });
+    $('.opening-skip', root).addEventListener('click', skip);
+    if (window.openingTap === 'skip') skip();
+    else if (window.openingTap) go();
+    return { idle, revealed };
+  }
+
+  // The logo is jelly too (SquishyLogo). A press squashes it under the finger, pulling stretches
+  // it and leans it after you, and letting go springs it back with a jiggle. With a mouse it turns
+  // toward the pointer, a gloss sliding over it, as it turns when the phone tilts in the app.
+  function initOpeningLogo(root) {
+    const box = $('.opening-logo', root), poke = $('.opening-poke', root), tilt = $('.opening-tilt', root);
+    let pulled = false;
+    if (!box || !poke || !tilt || reduceMotion) return { stop() {}, pulled: () => false };
+    const lean = [0, 0], leanTo = [0, 0];
+    let raf = 0, live = true, held = null, release = null;
+    const wobble = (s, amount, frequency, damping) => (s > 0 ? amount * Math.exp(-damping * s) * Math.cos(frequency * s) : 0);
+    // Pressed flat, pulled tall (or pushed down) and leaning after the finger; `amount` takes it
+    // all back toward rest.
+    const shape = (x, dx, dy, press, amount) => {
+      const up = clamp(-dy, -50, 110);
+      const sx = 1 + 0.16 * press - up / 600, sy = clamp(1 - 0.14 * press + up / 260, 0.72, 1.45);
+      return { x, sx: 1 + (sx - 1) * amount, sy: 1 + (sy - 1) * amount, lean: clamp(dx / 180, -0.35, 0.35) * amount };
+    };
+    const frame = now => {
+      raf = 0;
+      if (!live) return;
+      let moving = false;
+      for (let i = 0; i < 2; i++) {
+        lean[i] += (leanTo[i] - lean[i]) * 0.12;
+        if (Math.abs(leanTo[i] - lean[i]) > 0.001) moving = true;
+      }
+      tilt.style.transform = `perspective(1100px) rotateY(${(lean[0] * 14).toFixed(2)}deg) rotateX(${(-lean[1] * 10).toFixed(2)}deg)`;
+      tilt.style.setProperty('--gloss', Math.min(1, (Math.abs(lean[0]) + Math.abs(lean[1])) * 1.4).toFixed(3));
+      tilt.style.setProperty('--lx', lean[0].toFixed(3));
+      tilt.style.setProperty('--ly', lean[1].toFixed(3));
+      let s = null;
+      if (held) {
+        s = shape(held.x, held.dx, held.dy, Math.min(1, (now - held.at) / 120), 1);
+        moving = true;
+      } else if (release) {
+        const since = (now - release.at) / 1000, jiggle = wobble(since, 1, 11, 4);
+        s = shape(release.x, release.dx, release.dy, 1, jiggle);
+        // A little bounce of its own even after a plain tap.
+        s.sx += 0.06 * jiggle;
+        s.sy -= 0.08 * jiggle;
+        if (since > 1.4) { release = null; s = null; } else moving = true;
+      }
+      // Bent about the press, on the line the letters stand on (four fifths of the way down).
+      poke.style.transformOrigin = s ? `${s.x.toFixed(1)}px 80%` : '';
+      poke.style.transform = s ? `skewX(${(-Math.atan(s.lean) * 180 / Math.PI).toFixed(2)}deg) scale(${s.sx.toFixed(4)}, ${s.sy.toFixed(4)})` : '';
+      if (moving) raf = requestAnimationFrame(frame);
+    };
+    const kick = () => { if (!raf && live) raf = requestAnimationFrame(frame); };
+    root.addEventListener('pointerdown', ev => {
+      pulled = false;
+      if (held || ev.button > 0 || !ev.target.closest('.opening-logo')) return;
+      const r = box.getBoundingClientRect();
+      held = { id: ev.pointerId, x: ev.clientX - r.left, cx: ev.clientX, cy: ev.clientY, dx: 0, dy: 0, at: performance.now() };
+      release = null;
+      kick();
+    });
+    root.addEventListener('pointermove', ev => {
+      if (held && ev.pointerId === held.id) {
+        held.dx = ev.clientX - held.cx;
+        held.dy = ev.clientY - held.cy;
+        if (Math.hypot(held.dx, held.dy) > 12) pulled = true;
+      }
+      if (ev.pointerType === 'mouse') {
+        leanTo[0] = clamp((ev.clientX / innerWidth) * 2 - 1, -1, 1);
+        leanTo[1] = clamp((ev.clientY / innerHeight) * 2 - 1, -1, 1);
+      }
+      kick();
+    });
+    const letGo = ev => {
+      if (!held || ev.pointerId !== held.id) return;
+      release = { x: held.x, dx: held.dx, dy: held.dy, at: performance.now() };
+      held = null;
+      kick();
+    };
+    root.addEventListener('pointerup', letGo);
+    root.addEventListener('pointercancel', letGo);
+    root.addEventListener('pointerleave', ev => {
+      if (ev.pointerType === 'mouse') { leanTo[0] = leanTo[1] = 0; kick(); }
+    });
+    return {
+      stop() { live = false; cancelAnimationFrame(raf); },
+      pulled: () => pulled,
+    };
   }
 
   /* ---------------- app recordings ---------------- */
@@ -375,10 +542,13 @@
     fillSpecks();
     hydrateJellies();
     initNav();
-    initReveal();
     initCounts();
     initStore();
-    initPit();
+    // The hero waits for the opening: its pile builds in a quiet moment while the opening waits
+    // for a tap, and pours, as its headline rises, once the site shows.
+    const opening = initOpening();
+    Promise.race([opening.idle, opening.revealed]).then(() => initPit(opening.revealed));
+    opening.revealed.then(initReveal);
     initClips();
     initJellies();
     window.siteReady = true;

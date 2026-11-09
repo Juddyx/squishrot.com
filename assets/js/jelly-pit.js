@@ -1837,7 +1837,9 @@
     constructor(options) {
       Object.assign(this, options);
       this.toys = []; this.life = new Life();
-      this.elapsed = 0; this.accumulator = 0; this.held = null; this.dragged = false; this.heldTime = 0;
+      // `simTime` is the time the physics has actually covered, which falls behind `elapsed`
+      // whenever a frame runs out of budget.
+      this.elapsed = 0; this.simTime = 0; this.accumulator = 0; this.held = null; this.dragged = false; this.heldTime = 0;
       this.squeezeAmount = 0; this.finger = null; this.touchStart = null; this.fx = [];
       this.lastTap = null; this.W = 0; this.H = 0; this.floor = 60; this.zoneL = 0; this.zoneW = 0; this.size = 60;
       this.stats = { physicsMs: 0, awake: 0, frames: 0 };
@@ -1894,10 +1896,16 @@
       this.measure();
       // About two rows' worth beside the headline; a little fewer across a narrower screen.
       const count = Math.round((this.zoneW / this.size) * (this.wide.matches ? 2.2 : 1.7));
-      const picks = this.pick(count);
-      // As in the app, every jelly gets the same visual area.
       const commonSize = this.size * 0.81;
-      const big = commonSize * this.ratio * 1.35 > 220;
+      await this.makeToys(this.pick(count), commonSize, commonSize * this.ratio * 1.35 > 220);
+      const gap = Math.min(0.24, 2.5 / Math.max(1, this.toys.length));
+      this.toys.forEach((toy, i) => { toy.spawnTime = 0.16 + i * gap; });
+      this.lastSpawn = this.toys.length ? this.toys[this.toys.length - 1].spawnTime : 0;
+      this.built = true;
+    }
+    // Each pick's picture loaded and cut out, made a toy with its body and mind. As in the app,
+    // every jelly gets the same visual area (`commonSize` squared).
+    async makeToys(picks, commonSize, big) {
       const loads = new Map();
       for (const [id, finish] of picks) {
         const key = `${id}/${finish}`;
@@ -1925,10 +1933,6 @@
       });
       this.toys = toys;
       this.configureAll();
-      const gap = Math.min(0.24, 2.5 / Math.max(1, toys.length));
-      toys.forEach((toy, i) => { toy.spawnTime = 0.16 + i * gap; });
-      this.lastSpawn = toys.length ? toys[toys.length - 1].spawnTime : 0;
-      this.built = true;
     }
     // Jellies bump on their solid middles, so they snuggle up with arms and tails overlapping;
     // the walls keep those thin bits in view.
@@ -2002,7 +2006,9 @@
     update(dt) {
       const frame = Math.min(0.1, Math.max(0, dt));
       this.elapsed += frame;
-      this.toys.forEach((toy, i) => { if (!toy.spawned && this.elapsed >= toy.spawnTime) this.spawn(toy, i); });
+      // A pour drops each in on the physics' own clock, so a slow frame can't stack them up.
+      const clock = this.spawnsOnSim ? this.simTime : this.elapsed;
+      this.toys.forEach((toy, i) => { if (!toy.spawned && clock >= toy.spawnTime) this.spawn(toy, i); });
       const live = this.toys.filter(t => t.spawned);
       // Holding a jelly without moving squeezes it flat.
       this.heldTime = this.held && !this.dragged ? this.heldTime + frame : 0;
@@ -2024,9 +2030,10 @@
         for (const toy of live) toy.body.renderFrame(frame);
         this.accumulator = 0;
         this.stats.physicsMs = 0;
+        this.simTime += frame;
         return;
       }
-      const step = T.substep, shoved = new Set(), start = performance.now();
+      const step = this.substep || T.substep, passes = this.contactPasses || 2, shoved = new Set(), start = performance.now();
       this.accumulator = Math.min(this.accumulator + frame, 0.1);
       // Catch up on missed time only while this frame's physics stays in budget; past that the
       // pile slows a moment rather than fall further behind.
@@ -2034,7 +2041,7 @@
         for (const toy of awake) toy.body.prepareStep(step);
         // Both skins and the floor together; a resting toy holds still against a moving one
         // unless it's shoved.
-        for (let pass = 0; pass < 2; pass++) {
+        for (let pass = 0; pass < passes; pass++) {
           for (let i = 0; i < live.length; i++) {
             const a = live[i];
             for (let j = i + 1; j < live.length; j++) {
@@ -2050,6 +2057,7 @@
         }
         for (const toy of awake) toy.body.finishStep(step);
         this.accumulator -= step;
+        this.simTime += step;
         if (performance.now() - start > PHYSICS_BUDGET) { this.accumulator = 0; break; }
       }
       this.stats.physicsMs = performance.now() - start;
@@ -2331,22 +2339,182 @@
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.decoding = 'async';
-      img.onload = () => resolve(img);
+      // Decoded off the main thread before it's drawn where the browser can, but never waited on
+      // for long: a page that isn't being drawn may not decode until it is.
+      img.onload = () => {
+        if (!img.decode) { resolve(img); return; }
+        Promise.race([img.decode().catch(() => {}), new Promise(done => setTimeout(done, 400))]).then(() => resolve(img));
+      };
       img.onerror = reject;
       img.src = src;
     });
   }
 
   // ---------------------------------------------------------------------------------------
+  // The app's opening (OnboardingView's JellyPour): every jelly pouring down the whole screen
+  // like sweets into a jar, in the pile's own physics: one at a time and slowly at first, then
+  // faster and faster, landing with a squash and squishing in amongst each other as the heap
+  // rises up the screen. Once it's full it says so, and the page underneath takes over.
+  const POUR_COUNT = 46, POUR_FIRST = 0.1, POUR_FLOOR = 18;
+  // When each drops in, after the first: gaps that start slow and shrink (JellyPileScene.pourDelay).
+  function pourDelay(index) {
+    let delay = 0, gap = 0.3;
+    for (let i = 0; i < index; i++) { delay += gap; gap = Math.max(0.045, gap * 0.84); }
+    return delay;
+  }
+  // Covered once the last has dropped in and settled a moment.
+  const POUR_COVERED = POUR_FIRST + pourDelay(POUR_COUNT - 1) + 0.75;
+  // FlowEase.noise: deterministic, 0..<1.
+  const noise = n => { const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+
+  // The app's substeps and contact passes, then lighter ones for a device that can't keep up with
+  // a full heap in JavaScript: 46 squishing together look the same at any of them.
+  const POUR_LEVELS = [[1 / 480, 2], [1 / 240, 2], [1 / 240, 1]];
+
+  class Pour extends Pile {
+    constructor(options) {
+      super(options);
+      this.spawnsOnSim = true;
+      this.level = 0; this.strained = 0;
+      [this.substep, this.contactPasses] = POUR_LEVELS[0];
+    }
+    update(dt) {
+      super.update(dt);
+      // Out of budget frame after frame: a step lighter, for the rest of the pour.
+      this.strained = this.stats.physicsMs >= PHYSICS_BUDGET * 0.8 ? this.strained + 1 : 0;
+      if (this.strained >= 3 && this.level < POUR_LEVELS.length - 1) {
+        this.level++;
+        this.strained = 0;
+        [this.substep, this.contactPasses] = POUR_LEVELS[this.level];
+      }
+    }
+    // The whole screen. Each jelly the app's size on a phone (31% of the width, at most 132
+    // points); on a bigger screen, big enough that the same 46 fill it.
+    measure() {
+      this.W = this.hero.clientWidth;
+      this.H = this.hero.clientHeight;
+      this.floor = POUR_FLOOR; this.zoneL = 0; this.zoneW = this.W;
+      this.size = Math.max(Math.min(this.W * 0.31, 132), Math.sqrt((2.1 * this.W * this.H) / POUR_COUNT));
+      this.ratio = Math.min(2, window.devicePixelRatio || 1);
+      if (this.gl) this.gl.resize(this.W, this.H, this.ratio);
+      else { this.canvas.width = Math.round(this.W * this.ratio); this.canvas.height = Math.round(this.H * this.ratio); }
+    }
+    // Every jelly over again in its plain look, and every seventh a showpiece in its grandest,
+    // Diamonds and Shinies taking turns (FlowStar).
+    pick() {
+      const ids = this.jellies.map(j => j.id);
+      const looks = finish => this.jellies.filter(j => j.finishes.includes(finish)).map(j => j.id);
+      const diamonds = looks('diamond'), shinies = looks('shiny'), stars = [];
+      for (let i = 0; i < Math.max(diamonds.length, shinies.length); i++) {
+        if (i < diamonds.length) stars.push([diamonds[i], 'diamond']);
+        if (i < shinies.length) stars.push([shinies[i], 'shiny']);
+      }
+      return Array.from({ length: POUR_COUNT }, (_, i) => (i % 7 === 3 && stars.length ? stars[i % stars.length] : [ids[(i * 5) % ids.length], 'common']));
+    }
+    async build() {
+      this.measure();
+      await this.makeToys(this.pick(), this.size, this.size * this.ratio > 300);
+      this.toys.forEach((toy, i) => { toy.spawnTime = POUR_FIRST + pourDelay(i); });
+      this.lastSpawn = this.toys.length ? this.toys[this.toys.length - 1].spawnTime : 0;
+      this.built = true;
+    }
+    // The screen changed before it poured: each jelly sized for the new one.
+    resize() {
+      this.measure();
+      for (const toy of this.toys) {
+        toy.height = this.size / Math.sqrt(Math.max(toy.aspect, 0.1));
+        toy.width = toy.height * toy.aspect;
+      }
+      this.configureAll();
+    }
+    // In from above anywhere across most of the width, already falling fast, a little tilted
+    // and turning.
+    spawn(toy, index) {
+      const margin = (toy.height * toy.aspect) / 2 + 8;
+      const x = clamp(this.W * (0.1 + 0.8 * noise(index * 1.37 + 0.5) + unit() * 0.035), margin, this.W - margin);
+      toy.body.place(x, this.H + toy.height * 0.62, unit() * 30, -toy.height * 7, unit() * 0.18, unit() * 2);
+      toy.spawned = true;
+      toy.huddleLeft = HUDDLE_TIME;
+    }
+  }
+
+  // The pour over `host` (the whole screen). Built (loaded, unseen) ahead, so starting it only
+  // sets it going; `start()` resolves once the heap has filled the screen.
+  function pour({ host, jellies, faces, srcFor }) {
+    const canvas = document.createElement('canvas');
+    canvas.className = 'pour-canvas';
+    canvas.setAttribute('aria-hidden', 'true');
+    host.appendChild(canvas);
+    const heap = new Pour({ hero: host, canvas, jellies, faces, srcFor, reduceMotion: false });
+    window.squishPour = heap;                           // handy for checking the frame budget in the console
+    let running = false, started = false, stopped = false, last = 0, covered = null;
+    // Built for the screen it pours over, so not before that has a size.
+    const sized = () => host.clientWidth >= 100 && host.clientHeight >= 100;
+    const ready = new Promise(resolve => {
+      const build = () => heap.build().then(() => resolve(heap.toys.length > 0), () => resolve(false));
+      if (sized() || !window.ResizeObserver) { build(); return; }
+      const watch = new ResizeObserver(() => { if (sized()) { watch.disconnect(); build(); } });
+      watch.observe(host);
+    });
+    const frame = now => {
+      if (!running) return;
+      if (stopped || document.hidden) { running = false; return; }
+      // At most the app's 60 frames a second, even on a faster screen.
+      if (now - last < 10.5) { requestAnimationFrame(frame); return; }
+      const dt = Math.min(0.1, (now - last) / 1000 || 1 / 60);
+      last = now;
+      heap.update(dt);
+      heap.stepEffects(dt);
+      heap.draw(now / 1000);
+      heap.stats.frames++;
+      if (covered && heap.simTime >= POUR_COVERED) { const done = covered; covered = null; done(); }
+      requestAnimationFrame(frame);
+    };
+    const run = () => {
+      if (running || stopped || !started || document.hidden) return;
+      running = true;
+      last = performance.now();
+      requestAnimationFrame(frame);
+    };
+    const resized = () => { if (started && !stopped) heap.relayout(); };
+    document.addEventListener('visibilitychange', run);
+    addEventListener('resize', resized);
+    return {
+      ready,
+      start() {
+        if (started) return Promise.resolve();
+        if (Math.abs(host.clientWidth - heap.W) > 1 || Math.abs(host.clientHeight - heap.H) > 1) heap.resize();
+        started = true;
+        const filled = new Promise(resolve => { covered = resolve; });
+        run();
+        return filled;
+      },
+      // Holds the last frame, for the heap to drop away as a picture.
+      stop() { stopped = true; running = false; },
+      destroy() {
+        stopped = true; running = false;
+        document.removeEventListener('visibilitychange', run);
+        removeEventListener('resize', resized);
+        const gl = heap.gl && heap.gl.gl, lose = gl && gl.getExtension('WEBGL_lose_context');
+        if (lose) lose.loseContext();
+        heap.canvas.remove();
+        if (window.squishPour === heap) window.squishPour = null;
+      },
+    };
+  }
+
+  // ---------------------------------------------------------------------------------------
   // On the page.
-  function start({ hero, pit, hint, jellies, faces, srcFor, reduceMotion }) {
+  // `holdUntil`: a promise the pour waits for once built (the site's opening, playing over it).
+  function start({ hero, pit, hint, jellies, faces, srcFor, reduceMotion, holdUntil }) {
     const canvas = document.createElement('canvas');
     canvas.className = 'pit-canvas';
     canvas.setAttribute('aria-hidden', 'true');
     pit.appendChild(canvas);
     const pile = new Pile({ hero, canvas, hint, jellies, faces, srcFor, reduceMotion, wide: matchMedia('(min-width: 900px)') });
     window.squishPit = pile;                            // handy for checking the frame budget in the console
-    let started = false, ready = false, running = false, visible = false, last = 0;
+    let started = false, ready = false, running = false, visible = false, last = 0, held = !!holdUntil;
+    if (holdUntil) holdUntil.then(() => { held = false; wake(); });
 
     const local = ev => { const r = hero.getBoundingClientRect(); return [ev.clientX - r.left, pile.H - (ev.clientY - r.top)]; };
     const frame = now => {
@@ -2363,7 +2531,7 @@
       else running = false;
     };
     const wake = () => {
-      if (running || !visible || !ready || reduceMotion || document.hidden) return;
+      if (held || running || !visible || !ready || reduceMotion || document.hidden) return;
       running = true;
       last = performance.now();
       requestAnimationFrame(frame);
@@ -2465,5 +2633,5 @@
     return pile;
   }
 
-  window.SquishPit = { start };
+  window.SquishPit = { start, pour };
 })();

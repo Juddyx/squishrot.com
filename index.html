@@ -13,12 +13,83 @@
       probe.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAE1pUHJhdmlmbWlhZm1pZjEAAAHobWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAAOcGl0bQAAAAAAAQAAAE1paW5mAAAAAAADAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAFWluZmUCAAABAAIAAGF2MDEAAAAAFWluZmUCAAABAAMAAEV4aWYAAAAAKGlyZWYAAAAAAAAADmF1eGwAAgABAAEAAAAOY2RzYwADAAEAAQAAANppcHJwAAAAsWlwY28AAAATY29scm5jbHgAAgACAAaAAAAADGNsbGkAywBAAAAAFGlzcGUAAAAAAAAAAgAAAAIAAAAJaXJvdAAAAAAQcGl4aQAAAAADCAgIAAAADnBpeGkAAAAAAQgAAAA3YXV4QwAAAAB1cm46bXBlZzpoZXZjOjIwMTU6YXV4aWQ6MQAAAAAMAAAACE4BpQQAAf5AAAAADGF2MUOBAAwAAAAADGF2MUOBABwAAAAAIWlwbWEAAAAAAAAAAgABBoECAwWIhAACBQMGh4mEAAAAOmlsb2MAAAAARAAAAwABAAAAAQAAAmYAAAApAAIAAAABAAACjwAAAB0AAwAAAAEAAAIYAAAATgAAAAFtZGF0AAAAAAAAAKQAAAAGRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAAqADAAQAAAABAAAAAgAAAAASAAoMAAAAAAZ//AgQEDQgMhcQAZIACCCCIADb235ba5xLJkSGy4OYkRIACggAAAAABn/8FTIPEAGOACCIArFiH7QUuqOu';
     });
     document.documentElement.classList.add('js'); document.documentElement.lang = 'en';
+    /* The opening (the app's first screen) plays on arriving, not on coming back from another
+       page of the site or following a link to a section. */
+    (function () {
+      try {
+        var ref = document.referrer, fromHere = false, nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+        try { fromHere = !!ref && new URL(ref).origin === location.origin; } catch (e) {}
+        if (location.hash || fromHere || (nav && nav.type === 'back_forward')) return;
+        document.documentElement.classList.add('opening-on', 'opening-lock');
+        /* The site starts at the top under it, whatever the browser remembers. */
+        if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+        var logo = document.createElement('link');
+        logo.rel = 'preload'; logo.as = 'image'; logo.type = 'image/avif'; logo.href = 'assets/img/logo-intro.avif';
+        document.head.appendChild(logo);
+      } catch (e) {}
+    })();
     /* If the site script never runs, show everything rather than leave it hidden. */
-    setTimeout(function () { if (!window.siteReady) document.documentElement.classList.remove('js'); }, 4000);
+    setTimeout(function () { if (!window.siteReady) document.documentElement.classList.remove('js', 'opening-on', 'opening-lock'); }, 4000);
   </script>
   <script src="assets/js/data.js" defer></script>
   <script src="assets/js/jelly-pit.js" defer></script>
   <script src="assets/js/site.js" defer></script>
+<!-- ============ OPENING: the app's first screen ============ -->
+<div class="opening" id="opening" role="dialog" aria-modal="true" aria-label="Squishrot" aria-describedby="opening-how" tabindex="-1">
+  <div class="opening-hello">
+    <div class="opening-dust" aria-hidden="true"></div>
+    <div class="opening-glow" aria-hidden="true"><i></i><i></i></div>
+    <div class="opening-stage">
+      <div class="opening-fx" aria-hidden="true">
+        <span class="opening-star"><span><span><svg viewBox="-1 -1 2 2"><path d="M0-1Q.28-.28 1 0Q.28.28 0 1Q-.28.28-1 0Q-.28-.28 0-1Z"/></svg></span></span></span>
+        <svg class="opening-wave" viewBox="0 0 180 180"><circle cx="90" cy="90" r="90"/></svg>
+        <span class="opening-burst"></span>
+      </div>
+      <div class="opening-logo">
+        <div class="opening-pop"><div class="opening-breath"><div class="opening-poke"><div class="opening-tilt">
+          <picture><source type="image/avif" srcset="assets/img/logo-intro.avif"><img src="assets/img/logo-intro.png" alt="Squishrot" width="900" height="300" draggable="false"></picture>
+          <i class="opening-gloss" aria-hidden="true"></i>
+        </div></div></div></div>
+      </div>
+    </div>
+    <p class="opening-hint" aria-hidden="true"><span class="hint-desktop">Click to start</span><span class="hint-touch">Tap to start</span></p>
+    <p class="sr-only" id="opening-how">Press Enter to start, or Escape to skip.</p>
+  </div>
+  <button class="opening-skip" type="button">Skip</button>
+  <div class="opening-pour" aria-hidden="true"><div class="opening-shade"></div></div>
+</div>
+<script>
+  /* The opening's dust and burst, placed as the app places them (FlowEase.noise), sized with the
+     logo; and a tap noted in case it comes before the site script has loaded. */
+  (function () {
+    var root = document.getElementById('opening');
+    if (!root || !document.documentElement.classList.contains('opening-on')) return;
+    window.openingStart = performance.now();
+    root.addEventListener('pointerup', function (ev) {
+      window.openingTap = ev.target.closest && ev.target.closest('.opening-skip') ? 'skip' : 'go';
+    }, { once: true });
+    var noise = function (n) { var x = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+    var w = innerWidth, h = innerHeight, logoH = Math.min(w * 0.29, Math.max(118, Math.min(h * 0.2, 180)));
+    root.style.setProperty('--k', (logoH / 113).toFixed(3));
+    var dust = root.querySelector('.opening-dust'), out = '';
+    dust.style.setProperty('--h', h + 'px');
+    for (var i = 0; i < 34; i++) {
+      var travel = h + 40, from = noise(i + 5) * travel, speed = (10 + noise(i + 2) * 20) * 0.45;
+      out += '<i style="left:' + (noise(i) * 100).toFixed(2) + '%;--s:' + (2 + noise(i + 7) * 3.5).toFixed(2) + 'px;--a:' + [1, 0.7, 0.45][i % 3] +
+        ';--y:' + (h + 20 - from).toFixed(1) + 'px;--rt:' + (travel / speed).toFixed(2) + 's;--rd:' + (-from / speed).toFixed(2) +
+        's;--gt:' + (Math.PI / (1.4 + noise(i + 9) * 2.2)).toFixed(3) + 's;--gd:' + (-i) + 's"></i>';
+    }
+    dust.innerHTML = out;
+    var burst = root.querySelector('.opening-burst'), colors = ['#fff', '#00cc45', '#00abcc', '#006ef5', '#cc00a6', '#ffcc66'];
+    out = '';
+    for (var k = 0; k < 28; k++) {
+      var angle = k / 28 * 2 * Math.PI + noise(k) * 0.5, reach = 170 * (0.6 + 0.5 * noise(k + 3));
+      out += '<i style="--x:' + (Math.cos(angle) * reach).toFixed(1) + 'px;--y:' + (Math.sin(angle) * reach).toFixed(1) + 'px;--c:' + colors[k % 6] + '"></i>';
+    }
+    burst.innerHTML = out;
+  })();
+</script>
+
 <a class="skip" href="#main">Skip to content</a>
 
 <header class="nav" id="nav">
