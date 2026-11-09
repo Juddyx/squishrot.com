@@ -1639,14 +1639,13 @@
   }
 
   class Renderer {
-    constructor(canvas) {
+    constructor(canvas, antialias = true) {
       this.canvas = canvas;
-      const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias: true, depth: false, stencil: false });
+      const gl = canvas.getContext('webgl', { alpha: true, premultipliedAlpha: true, antialias, depth: false, stencil: false });
       if (!gl) throw new Error('no webgl');
       this.gl = gl;
       this.textures = new Map();
       this.positions = new Float32Array(FINE * FINE * 2);
-      this.fine = new Float64Array(FINE * FINE * 2);
       this.quad = new Float32Array(8);
       this.init();
     }
@@ -1736,41 +1735,83 @@
       gl.viewport(0, 0, this.canvas.width, this.canvas.height);
       gl.clearColor(0, 0, 0, 0);
       gl.clear(gl.COLOR_BUFFER_BIT);
+      // A new frame: every warp grid refined anew, and the GL state set again on first use.
+      this.frame = (this.frame || 0) + 1;
+      this.mode = null; this.additive = null; this.meshTime = null;
+    }
+    // The GL state shared by draws of one kind, sent only when the kind changes; each draw then
+    // sends just what's its own (a pile of a hundred makes hundreds of draws a frame).
+    useMeshes(time) {
+      const gl = this.gl, f = this.faceProgram;
+      if (this.mode !== 'mesh') {
+        gl.useProgram(f.p);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.meshUV);
+        gl.enableVertexAttribArray(f.uv);
+        gl.vertexAttribPointer(f.uv, 2, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.meshPos);
+        gl.enableVertexAttribArray(f.pos);
+        gl.vertexAttribPointer(f.pos, 2, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.meshIndex);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.uniform1i(f.u.u_texture, 0);
+        gl.uniform2f(f.u.u_view, this.width, this.height);
+        this.mode = 'mesh';
+        this.meshTime = null;
+      }
+      if (this.meshTime !== time) { gl.uniform1f(f.u.u_time, time); this.meshTime = time; }
+      this.blend(false);
+    }
+    useSprites() {
+      if (this.mode === 'sprite') return;
+      const gl = this.gl, s = this.spriteProgram;
+      gl.useProgram(s.p);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.quadUV);
+      gl.enableVertexAttribArray(s.uv);
+      gl.vertexAttribPointer(s.uv, 2, gl.FLOAT, false, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, this.quadPos);
+      gl.enableVertexAttribArray(s.pos);
+      gl.vertexAttribPointer(s.pos, 2, gl.FLOAT, false, 0, 0);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.uniform1i(s.u.u_texture, 0);
+      gl.uniform2f(s.u.u_view, this.width, this.height);
+      this.mode = 'sprite';
+    }
+    blend(additive) {
+      if (this.additive === additive) return;
+      const gl = this.gl;
+      if (additive) gl.blendFunc(gl.ONE, gl.ONE); else gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+      this.additive = additive;
     }
     // A body, its warp grid at `dest` (0...1 over its body, y up), drawn `sw` x `sh` about its middle;
     // `plain` draws just its picture, as the app's smear behind it is.
     mesh(toy, dest, cx, cy, alpha, time, plain = false) {
-      const gl = this.gl, f = this.faceProgram, fine = this.fine, out = this.positions, sw = toy.body.bodyW * toy.body.overhang, sh = toy.body.bodyH;
-      for (let r = 0; r < FINE; r++) {
-        for (let c = 0; c < FINE; c++) {
-          let x = 0, y = 0;
-          for (let a = 0; a < 4; a++) {
-            const wr = FINE_WEIGHT[r * 4 + a], row = FINE_INDEX[r * 4 + a] * COLS;
-            for (let b = 0; b < 4; b++) {
-              const w = wr * FINE_WEIGHT[c * 4 + b], i = (row + FINE_INDEX[c * 4 + b]) * 2;
-              x += w * dest[i]; y += w * dest[i + 1];
+      const gl = this.gl, f = this.faceProgram, out = this.positions, sw = toy.body.bodyW * toy.body.overhang, sh = toy.body.bodyH;
+      // Its warp grid, refined once a frame (its smear's ghosts are the same shape, drawn behind).
+      const fine = toy.fineGrid || (toy.fineGrid = new Float32Array(FINE * FINE * 2));
+      if (toy.fineFrame !== this.frame || toy.fineDest !== dest) {
+        for (let r = 0; r < FINE; r++) {
+          for (let c = 0; c < FINE; c++) {
+            let x = 0, y = 0;
+            for (let a = 0; a < 4; a++) {
+              const wr = FINE_WEIGHT[r * 4 + a], row = FINE_INDEX[r * 4 + a] * COLS;
+              for (let b = 0; b < 4; b++) {
+                const w = wr * FINE_WEIGHT[c * 4 + b], i = (row + FINE_INDEX[c * 4 + b]) * 2;
+                x += w * dest[i]; y += w * dest[i + 1];
+              }
             }
+            const j = (r * FINE + c) * 2;
+            fine[j] = x; fine[j + 1] = y;
           }
-          const j = (r * FINE + c) * 2;
-          fine[j] = x; fine[j + 1] = y;
-          out[j] = cx + (x - 0.5) * sw;
-          out[j + 1] = cy + (y - 0.5) * sh;
         }
+        toy.fineFrame = this.frame; toy.fineDest = dest;
       }
-      gl.useProgram(f.p);
-      gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.meshPos);
+      for (let j = 0; j < fine.length; j += 2) {
+        out[j] = cx + (fine[j] - 0.5) * sw;
+        out[j + 1] = cy + (fine[j + 1] - 0.5) * sh;
+      }
+      this.useMeshes(time);
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, out);
-      gl.enableVertexAttribArray(f.pos);
-      gl.vertexAttribPointer(f.pos, 2, gl.FLOAT, false, 0, 0);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.meshUV);
-      gl.enableVertexAttribArray(f.uv);
-      gl.vertexAttribPointer(f.uv, 2, gl.FLOAT, false, 0, 0);
-      gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.meshIndex);
-      gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, toy.art.texture);
-      gl.uniform1i(f.u.u_texture, 0);
-      gl.uniform2f(f.u.u_view, this.width, this.height);
       const e = toy.eyes, b = toy.body;
       gl.uniform4fv(f.u.u_leftEye, e.left);
       gl.uniform4fv(f.u.u_rightEye, e.right);
@@ -1780,7 +1821,6 @@
       gl.uniform2f(f.u.u_gaze, face ? b.lookX : 0, face ? b.lookY : 0);
       gl.uniform3f(f.u.u_gloss, b.glossU, b.glossV, face ? b.glossK : 0);
       gl.uniform1f(f.u.u_flow, plain ? 0 : toy.flow);
-      gl.uniform1f(f.u.u_time, time);
       gl.uniform1f(f.u.u_alpha, alpha);
       gl.drawElements(gl.TRIANGLES, this.meshCount, gl.UNSIGNED_SHORT, 0);
     }
@@ -1791,19 +1831,10 @@
       const hx = w / 2, hy = h / 2;
       const corner = (k, px, py) => { q[k] = x + c * px - sn * py; q[k + 1] = y + sn * px + c * py; };
       corner(0, -hx, -hy); corner(2, hx, -hy); corner(4, -hx, hy); corner(6, hx, hy);
-      gl.useProgram(s.p);
-      if (additive) gl.blendFunc(gl.ONE, gl.ONE); else gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.quadPos);
+      this.useSprites();
+      this.blend(additive);
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, q);
-      gl.enableVertexAttribArray(s.pos);
-      gl.vertexAttribPointer(s.pos, 2, gl.FLOAT, false, 0, 0);
-      gl.bindBuffer(gl.ARRAY_BUFFER, this.quadUV);
-      gl.enableVertexAttribArray(s.uv);
-      gl.vertexAttribPointer(s.uv, 2, gl.FLOAT, false, 0, 0);
-      gl.activeTexture(gl.TEXTURE0);
       gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.uniform1i(s.u.u_texture, 0);
-      gl.uniform2f(s.u.u_view, this.width, this.height);
       gl.uniform4f(s.u.u_color, r, g, b, alpha);
       gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     }
@@ -1843,7 +1874,7 @@
       this.squeezeAmount = 0; this.finger = null; this.touchStart = null; this.fx = [];
       this.lastTap = null; this.W = 0; this.H = 0; this.floor = 60; this.zoneL = 0; this.zoneW = 0; this.size = 60;
       this.stats = { physicsMs: 0, awake: 0, frames: 0 };
-      try { this.gl = new Renderer(this.canvas); } catch (e) { this.gl = null; }
+      try { this.gl = new Renderer(this.canvas, this.antialias !== false); } catch (e) { this.gl = null; }
       if (this.gl) {
         this.canvas.addEventListener('webglcontextlost', ev => { ev.preventDefault(); this.lost = true; });
         this.canvas.addEventListener('webglcontextrestored', () => { this.lost = false; this.gl.init(); });
@@ -2233,8 +2264,9 @@
         if (!still) {
           const speed = Math.hypot(b.rvx, b.rvy) / b.bodyH, strength = toy.resting ? 0 : clamp((speed - T.trailFrom) / T.trailFrom, 0, 1);
           if (strength > 0.01) {
-            for (let k = 0; k < T.trailCount; k++) {
-              const fraction = (k + 1) / (T.trailCount + 1);
+            const ghosts = this.trailCount || T.trailCount;
+            for (let k = 0; k < ghosts; k++) {
+              const fraction = (k + 1) / (ghosts + 1);
               items.push([z - 1 - k, () => gl.mesh(toy, b.dest, b.drawX - b.rvx * T.trailDuration * fraction,
                 b.drawY - b.rvy * T.trailDuration * fraction, strength * 0.3 * (1 - fraction), t, true)]);
             }
@@ -2351,57 +2383,65 @@
   }
 
   // ---------------------------------------------------------------------------------------
-  // The app's opening (OnboardingView's JellyPour): every jelly pouring down the whole screen
-  // like sweets into a jar, in the pile's own physics: one at a time and slowly at first, then
-  // faster and faster, landing with a squash and squishing in amongst each other as the heap
-  // rises up the screen. Once it's full it says so, and the page underneath takes over.
-  const POUR_COUNT = 46, POUR_FIRST = 0.1, POUR_FLOOR = 18;
-  // When each drops in, after the first: gaps that start slow and shrink (JellyPileScene.pourDelay).
+  // The site's opening pour, after the app's (OnboardingView's JellyPour) and in the pile's own
+  // physics, but smaller and wilder: a few jellies drop in slowly, one at a time, then they come
+  // faster and faster until all the rest flood down at once and bury the screen. Once it's full it
+  // says so, and the page underneath takes over.
+  const POUR_FIRST = 0.1, POUR_FLOOR = 18;
+  // When each drops in, after the first: long gaps that shrink fast, down to a flood of about 110
+  // a second.
   function pourDelay(index) {
-    let delay = 0, gap = 0.3;
-    for (let i = 0; i < index; i++) { delay += gap; gap = Math.max(0.045, gap * 0.84); }
+    let delay = 0, gap = 0.62;
+    for (let i = 0; i < index; i++) { delay += gap; gap = Math.max(0.009, gap * 0.76); }
     return delay;
   }
-  // Covered once the last has dropped in and settled a moment.
-  const POUR_COVERED = POUR_FIRST + pourDelay(POUR_COUNT - 1) + 0.75;
-  // FlowEase.noise: deterministic, 0..<1.
-  const noise = n => { const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+  // The first few drop in gently where they'll be watched, a little either side of the middle;
+  // from POUR_RUSH on they come too fast to follow one by one.
+  const SLOW_LANES = [0.5, 0.31, 0.69, 0.41, 0.6, 0.24, 0.77], POUR_GENTLE = 5, POUR_RUSH = 9;
 
-  // The app's substeps and contact passes, then lighter ones for a device that can't keep up with
-  // a full heap in JavaScript: 46 squishing together look the same at any of them.
-  const POUR_LEVELS = [[1 / 480, 2], [1 / 240, 2], [1 / 240, 1]];
+  // The app's substeps and contact passes for the few, then lighter ones for the flood: a hundred
+  // jellies tumbling together look the same at any of them, and JavaScript can't run so many at the
+  // app's. A device still short of time steps down sooner.
+  const POUR_LEVELS = [[1 / 480, 2], [1 / 240, 2], [1 / 160, 1]];
 
   class Pour extends Pile {
     constructor(options) {
       super(options);
       this.spawnsOnSim = true;
+      // Two ghosts in a falling jelly's smear rather than four: they're small, and a hundred.
+      this.trailCount = 2;
       this.level = 0; this.strained = 0;
       [this.substep, this.contactPasses] = POUR_LEVELS[0];
     }
     update(dt) {
       super.update(dt);
-      // Out of budget frame after frame: a step lighter, for the rest of the pour.
       this.strained = this.stats.physicsMs >= PHYSICS_BUDGET * 0.8 ? this.strained + 1 : 0;
-      if (this.strained >= 3 && this.level < POUR_LEVELS.length - 1) {
-        this.level++;
-        this.strained = 0;
-        [this.substep, this.contactPasses] = POUR_LEVELS[this.level];
-      }
+      const last = POUR_LEVELS.length - 1;
+      if (this.level < last && this.toys.length > POUR_RUSH && this.toys[POUR_RUSH].spawned) this.setLevel(last);
+      else if (this.strained >= 3 && this.level < last) this.setLevel(this.level + 1);
     }
-    // The whole screen. Each jelly the app's size on a phone (31% of the width, at most 132
-    // points); on a bigger screen, big enough that the same 46 fill it.
+    // A flood has no middle to gather round.
+    huddle(live) { for (const toy of live) toy.body.huddle = null; }
+    setLevel(level) {
+      this.level = level;
+      this.strained = 0;
+      [this.substep, this.contactPasses] = POUR_LEVELS[level];
+    }
+    // The whole screen, each jelly about an eighth of its size across (a fifth of a phone's width).
     measure() {
       this.W = this.hero.clientWidth;
       this.H = this.hero.clientHeight;
       this.floor = POUR_FLOOR; this.zoneL = 0; this.zoneW = this.W;
-      this.size = Math.max(Math.min(this.W * 0.31, 132), Math.sqrt((2.1 * this.W * this.H) / POUR_COUNT));
-      this.ratio = Math.min(2, window.devicePixelRatio || 1);
+      this.size = clamp(0.13 * Math.sqrt(this.W * this.H), 56, 170);
+      // A canvas the size of the screen, drawn a hundred times over each frame: kept to about
+      // three million pixels, which is still twice over on a phone.
+      this.ratio = Math.min(2, window.devicePixelRatio || 1, Math.sqrt(3e6 / Math.max(1, this.W * this.H)));
       if (this.gl) this.gl.resize(this.W, this.H, this.ratio);
       else { this.canvas.width = Math.round(this.W * this.ratio); this.canvas.height = Math.round(this.H * this.ratio); }
     }
-    // Every jelly over again in its plain look, and every seventh a showpiece in its grandest,
+    // Every jelly over and over in its plain look, and every seventh a showpiece in its grandest,
     // Diamonds and Shinies taking turns (FlowStar).
-    pick() {
+    pick(count) {
       const ids = this.jellies.map(j => j.id);
       const looks = finish => this.jellies.filter(j => j.finishes.includes(finish)).map(j => j.id);
       const diamonds = looks('diamond'), shinies = looks('shiny'), stars = [];
@@ -2409,11 +2449,13 @@
         if (i < diamonds.length) stars.push([diamonds[i], 'diamond']);
         if (i < shinies.length) stars.push([shinies[i], 'shiny']);
       }
-      return Array.from({ length: POUR_COUNT }, (_, i) => (i % 7 === 3 && stars.length ? stars[i % stars.length] : [ids[(i * 5) % ids.length], 'common']));
+      return Array.from({ length: count }, (_, i) => (i % 7 === 3 && stars.length ? stars[i % stars.length] : [ids[(i * 5) % ids.length], 'common']));
     }
     async build() {
       this.measure();
-      await this.makeToys(this.pick(), this.size, this.size * this.ratio > 300);
+      // As many as it takes to bury the screen.
+      const count = clamp(Math.round((2 * this.W * this.H) / (this.size * this.size)), 70, 150);
+      await this.makeToys(this.pick(count), this.size, this.size * this.ratio > 300);
       this.toys.forEach((toy, i) => { toy.spawnTime = POUR_FIRST + pourDelay(i); });
       this.lastSpawn = this.toys.length ? this.toys[this.toys.length - 1].spawnTime : 0;
       this.built = true;
@@ -2427,14 +2469,49 @@
       }
       this.configureAll();
     }
-    // In from above anywhere across most of the width, already falling fast, a little tilted
-    // and turning.
+    // The first few drop in gently near the middle; the flood comes from anywhere across, falling
+    // fast and tumbling, each dropped in just above any it would land on.
     spawn(toy, index) {
       const margin = (toy.height * toy.aspect) / 2 + 8;
-      const x = clamp(this.W * (0.1 + 0.8 * noise(index * 1.37 + 0.5) + unit() * 0.035), margin, this.W - margin);
-      toy.body.place(x, this.H + toy.height * 0.62, unit() * 30, -toy.height * 7, unit() * 0.18, unit() * 2);
+      const lane = index < SLOW_LANES.length ? SLOW_LANES[index] + unit() * 0.03 : 0.06 + 0.88 * ((0.5 + index * 0.6180339887) % 1) + unit() * 0.02;
+      const x = clamp(this.W * lane, margin, this.W - margin);
+      const rush = clamp((index - POUR_GENTLE) / (POUR_RUSH - POUR_GENTLE), 0, 1);
+      let y = this.H + toy.height * (0.62 + rush * 1.2 * Math.random());
+      for (let k = Math.max(0, index - 16); k < index; k++) {
+        const b = this.toys[k].body;
+        if (this.toys[k].spawned && Math.abs(b.cx - x) < (b.bodyW * b.overhang + toy.width) / 2 && Math.abs(b.cy - y) < (b.bodyH + toy.height) / 2) {
+          y = b.cy + (b.bodyH + toy.height) / 2 + 2;
+        }
+      }
+      const speed = 2 + rush * (8 + 3 * Math.random());
+      toy.body.place(x, y, unit() * (20 + 25 * rush), -toy.height * speed, unit() * (0.12 + 0.18 * rush), unit() * (1.2 + 1.8 * rush));
       toy.spawned = true;
       toy.huddleLeft = HUDDLE_TIME;
+    }
+    // How much of the screen above the floor the jellies hide: a grid of points tested against
+    // their bodies (narrower than their pictures, so it never claims too much: 0.86 looks buried).
+    coverage() {
+      const cols = 14, rows = Math.max(6, Math.round((cols * this.H) / this.W)), boxes = [];
+      for (const toy of this.toys) {
+        if (!toy.spawned) continue;
+        const b = toy.body, inX = (b.maxX - b.minX) * 0.1, inY = (b.maxY - b.minY) * 0.1;
+        boxes.push([b.minX + inX, b.minY + inY, b.maxX - inX, b.maxY - inY]);
+      }
+      let hidden = 0;
+      for (let r = 0; r < rows; r++) {
+        const y = this.floor + ((r + 0.5) / rows) * (this.H - this.floor);
+        for (let c = 0; c < cols; c++) {
+          const x = ((c + 0.5) / cols) * this.W;
+          for (const q of boxes) if (x >= q[0] && x <= q[2] && y >= q[1] && y <= q[3]) { hidden++; break; }
+        }
+      }
+      return hidden / (rows * cols);
+    }
+    // Full once they're all in and bury it: at the height of the flood, while the last are still
+    // raining down over the top (once they've landed the heap is lower). Soon after anyway.
+    get full() {
+      if (!this.toys.length || !this.toys[this.toys.length - 1].spawned) return false;
+      return this.simTime >= this.lastSpawn + 0.8 || this.coverage() >= 0.86;
     }
   }
 
@@ -2445,7 +2522,8 @@
     canvas.className = 'pour-canvas';
     canvas.setAttribute('aria-hidden', 'true');
     host.appendChild(canvas);
-    const heap = new Pour({ hero: host, canvas, jellies, faces, srcFor, reduceMotion: false });
+    // Without multisampling: the jellies' edges are their pictures' own soft alpha.
+    const heap = new Pour({ hero: host, canvas, jellies, faces, srcFor, reduceMotion: false, antialias: false });
     window.squishPour = heap;                           // handy for checking the frame budget in the console
     let running = false, started = false, stopped = false, last = 0, covered = null;
     // Built for the screen it pours over, so not before that has a size.
@@ -2467,7 +2545,7 @@
       heap.stepEffects(dt);
       heap.draw(now / 1000);
       heap.stats.frames++;
-      if (covered && heap.simTime >= POUR_COVERED) { const done = covered; covered = null; done(); }
+      if (covered && heap.stats.frames % 3 === 0 && heap.full) { const done = covered; covered = null; done(); }
       requestAnimationFrame(frame);
     };
     const run = () => {
