@@ -1,0 +1,329 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Squishrot Website</title>
+  <!-- Paste the App Store link here once Squishrot is live. Every store button switches from "Coming soon" to "Download". -->
+  <meta name="app-store-url" content="">
+  <link rel="preload" href="assets/fonts/plus-jakarta-sans-800.woff" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script>
+    /* AVIF check: jelly art is AVIF, with PNG for the few browsers without it. */
+    window.avifReady = new Promise(function (done) {
+      var probe = new Image();
+      probe.onload = function () { done(true); };
+      probe.onerror = function () { document.documentElement.classList.add('no-avif'); done(false); };
+      probe.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAE1pUHJhdmlmbWlhZm1pZjEAAAHobWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAAOcGl0bQAAAAAAAQAAAE1paW5mAAAAAAADAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAFWluZmUCAAABAAIAAGF2MDEAAAAAFWluZmUCAAABAAMAAEV4aWYAAAAAKGlyZWYAAAAAAAAADmF1eGwAAgABAAEAAAAOY2RzYwADAAEAAQAAANppcHJwAAAAsWlwY28AAAATY29scm5jbHgAAgACAAaAAAAADGNsbGkAywBAAAAAFGlzcGUAAAAAAAAAAgAAAAIAAAAJaXJvdAAAAAAQcGl4aQAAAAADCAgIAAAADnBpeGkAAAAAAQgAAAA3YXV4QwAAAAB1cm46bXBlZzpoZXZjOjIwMTU6YXV4aWQ6MQAAAAAMAAAACE4BpQQAAf5AAAAADGF2MUOBAAwAAAAADGF2MUOBABwAAAAAIWlwbWEAAAAAAAAAAgABBoECAwWIhAACBQMGh4mEAAAAOmlsb2MAAAAARAAAAwABAAAAAQAAAmYAAAApAAIAAAABAAACjwAAAB0AAwAAAAEAAAIYAAAATgAAAAFtZGF0AAAAAAAAAKQAAAAGRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAAqADAAQAAAABAAAAAgAAAAASAAoMAAAAAAZ//AgQEDQgMhcQAZIACCCCIADb235ba5xLJkSGy4OYkRIACggAAAAABn/8FTIPEAGOACCIArFiH7QUuqOu';
+    });
+    document.documentElement.classList.add('js'); document.documentElement.lang = 'en';
+    /* If the site script never runs, show everything rather than leave it hidden. */
+    setTimeout(function () { if (!window.siteReady) document.documentElement.classList.remove('js'); }, 4000);
+  </script>
+  <script src="assets/js/data.js" defer></script>
+  <script src="assets/js/jelly-pit.js" defer></script>
+  <script src="assets/js/site.js" defer></script>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top" aria-label="Squishrot home">
+      <img class="brand-icon" src="assets/img/icon.png" alt="" width="40" height="40">
+      <img class="brand-word" src="assets/img/logo.png" alt="Squishrot" width="114" height="38">
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#how">How it works</a>
+      <a href="#den">Den</a>
+      <a href="#trade">Trade</a>
+      <a href="#jellies">Jellies</a>
+      <a href="#pro">Pro</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="jelly-btn jelly-btn--sm" href="#get"><span>Get Squishrot</span><i class="bub" aria-hidden="true"></i><i class="bub" aria-hidden="true"></i></a>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="top" aria-labelledby="hero-title">
+  <div class="specks" data-specks="60" aria-hidden="true"></div>
+  <div class="hero-glow" aria-hidden="true"></div>
+  <div class="hero-pit" id="pit" aria-hidden="true"></div>
+
+  <div class="wrap hero-copy">
+    <p class="eyebrow-pill reveal">Catch · Collect · Trade</p>
+    <h1 class="hero-title split" id="hero-title">Jellies are hiding <em class="green-text">near you</em></h1>
+    <p class="hero-sub reveal">Find them on the map, pop them open, and bounce your best ones in your Den for coins.</p>
+    <div class="hero-actions reveal">
+      <a class="store-badge" href="#get" data-store><svg viewBox="0 0 384 512" aria-hidden="true"><path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg><span><small data-store-top>Coming soon to the</small><b>App Store</b></span></a>
+      <a class="ghost-link" href="#how">See how it works <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3.5 8.5 8 13l4.5-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+    </div>
+    <p class="hero-note reveal">Free to play. Your location is never shown to other players.</p>
+  </div>
+  <p class="hero-hint" aria-hidden="true"><span class="hint-desktop">Click to squish, double-click to jump</span><span class="hint-touch">Tap to squish, double-tap to jump</span></p>
+</section>
+
+<!-- ============ PROOF ============ -->
+<section class="proof" aria-label="Squishrot in numbers">
+  <div class="wrap proof-row">
+    <div class="stat reveal"><b><span data-count="28">28</span></b><span>jellies to find</span></div>
+    <div class="stat reveal"><b><span data-count="6">6</span></b><span>rarities, Common to Diamond</span></div>
+    <div class="stat reveal"><b>+<span data-count="90">90</span>/hr</b><span>coins from one Diamond</span></div>
+    <div class="stat reveal"><b>Free</b><span>to download and play</span></div>
+  </div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section class="sec how" id="how" aria-labelledby="how-title">
+  <div class="wrap split-row">
+    <div class="copy">
+      <p class="eyebrow eyebrow--green reveal">How it works</p>
+      <h2 class="split" id="how-title">Walk up, hold, and see who you got</h2>
+      <p class="lede reveal">Tap Scan to find drops near you. Walk within reach, tap one and press Open, then hold the jelly ball until it bursts.</p>
+      <ul class="tiles">
+        <li class="tile reveal"><b class="tile-num tile-num--green">80&thinsp;m</b><span>Walk this close to a drop to open it</span></li>
+        <li class="tile reveal"><b class="tile-num tile-num--gold">8&thinsp;h</b><span>Your Den keeps earning coins while you're away</span></li>
+        <li class="tile reveal"><b class="tile-num tile-num--purple">3→1</b><span>The Blender turns three jellies into one rarer one</span></li>
+      </ul>
+    </div>
+    <div class="phone-slot reveal">
+      <div class="phone" id="phone-map" role="img" aria-label="Squishrot’s map: tapping a Rare drop in reach, pressing Open, then holding the jelly ball until it bursts and Procionini Kiwini pops out.">
+        <div class="screen">
+          <video class="shot clip" data-clip="map" poster="assets/clips/map.jpg" muted playsinline loop preload="none" aria-hidden="true"></video>
+          <i class="finger" aria-hidden="true"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DEN ============ -->
+<section class="band band--den" id="den" aria-labelledby="den-title">
+  <div class="specks" data-specks="40" aria-hidden="true"></div>
+  <div class="floaties" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="wrap split-row split-row--flip">
+    <div class="phone-slot reveal">
+      <div class="phone" id="phone-den" role="img" aria-label="The Den: jellies drop onto the slime and bounce, their coins fly into the count, and Collect pours them into the wallet.">
+        <div class="screen">
+          <video class="shot clip" data-clip="den" poster="assets/clips/den.jpg" muted playsinline loop preload="none" aria-hidden="true"></video>
+          <i class="finger" aria-hidden="true"></i>
+        </div>
+      </div>
+    </div>
+    <div class="copy">
+      <p class="eyebrow eyebrow--pink reveal">The Den</p>
+      <h2 class="split" id="den-title">Your jellies earn while you're away</h2>
+      <p class="lede reveal">Put your best jellies on the bed. Every bounce sends their coins into your count, and Collect pours them into your wallet.</p>
+      <ul class="checks checks--pink">
+        <li class="reveal">Rarer jellies earn more, up to 90 coins an hour</li>
+        <li class="reveal">Push a jelly into the bed for a quick bonus</li>
+        <li class="reveal">Grow from a Cozy Den into a Jelly Palace</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TRADE ============ -->
+<section class="band band--trade" id="trade" aria-labelledby="trade-title">
+  <div class="specks" data-specks="40" aria-hidden="true"></div>
+  <div class="floaties" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="wrap split-row">
+    <div class="copy">
+      <p class="eyebrow eyebrow--sky reveal">Trade</p>
+      <h2 class="split" id="trade-title">Swap for the jelly you're missing</h2>
+      <p class="lede reveal">List your doubles, make offers and trade with other collectors to finish your sets.</p>
+      <ul class="checks checks--sky">
+        <li class="reveal">Filter every listing by rarity</li>
+        <li class="reveal">Offer up to 6 jellies, coins or both</li>
+        <li class="reveal">Nothing moves until they accept</li>
+      </ul>
+    </div>
+    <div class="phone-slot reveal">
+      <div class="phone" id="phone-trade" role="img" aria-label="The trade market: opening Mira’s Diamond Tralalero Tralala, pressing Make an offer and picking a jelly to offer.">
+        <div class="screen">
+          <video class="shot clip" data-clip="trade" poster="assets/clips/trade.jpg" muted playsinline loop preload="none" aria-hidden="true"></video>
+          <i class="finger" aria-hidden="true"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ BLENDER ============ -->
+<section class="band band--blender" id="blender" aria-labelledby="blender-title">
+  <div class="specks" data-specks="40" aria-hidden="true"></div>
+  <div class="floaties" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="wrap split-row split-row--flip">
+    <div class="phone-slot reveal">
+      <div class="phone" id="phone-blender" role="img" aria-label="The Blender: three Shiny jellies drop into the jar, it blends, and holding the new ball reveals a Diamond Job Job Job Sahur.">
+        <div class="screen">
+          <video class="shot clip" data-clip="blender" poster="assets/clips/blender.jpg" muted playsinline loop preload="none" aria-hidden="true"></video>
+          <i class="finger" aria-hidden="true"></i>
+        </div>
+      </div>
+    </div>
+    <div class="copy">
+      <p class="eyebrow eyebrow--green reveal">The Blender</p>
+      <h2 class="split" id="blender-title">Three in, one rarer jelly out</h2>
+      <p class="lede reveal">Drop in three jellies of the same rarity, press the power button, then hold the new jelly’s ball to see what you made.</p>
+      <ul class="checks checks--green">
+        <li class="reveal">Turn your doubles into upgrades</li>
+        <li class="reveal">Climb from Common all the way to Diamond</li>
+        <li class="reveal">Favourites always stay out of the Blender</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ INSIDE THE APP ============ -->
+<section class="sec screens" id="screens" aria-labelledby="screens-title">
+  <div class="wrap center">
+    <p class="eyebrow eyebrow--green reveal">Inside the app</p>
+    <h2 class="split" id="screens-title">Your whole collection, one tap away</h2>
+    <p class="lede reveal">Browse your pile, bounce your best ones in the Den, scan the map, make trades and show off your favourites.</p>
+  </div>
+  <div class="fan reveal" role="list">
+    <figure class="fan-phone" style="--i:-2" role="listitem"><div class="phone phone--static" role="img" aria-label="Inventory: your whole collection piled up under the rarity filters, the jellies blinking and fidgeting"><div class="screen"><video class="shot clip" data-clip="fan-inventory" data-ambient poster="assets/clips/fan-inventory-still.jpg" muted playsinline loop preload="none" aria-hidden="true"></video></div></div></figure>
+    <figure class="fan-phone" style="--i:-1" role="listitem"><div class="phone phone--static" role="img" aria-label="Den: jellies bouncing on the slime, their coins landing in the count above Collect"><div class="screen"><video class="shot clip" data-clip="fan-den" data-ambient poster="assets/clips/fan-den-still.jpg" muted playsinline loop preload="none" aria-hidden="true"></video></div></div></figure>
+    <figure class="fan-phone" style="--i:0" role="listitem"><div class="phone phone--static" role="img" aria-label="Map: the green reach radar sweeping round you, with jelly drops bobbing nearby"><div class="screen"><video class="shot clip" data-clip="fan-map" data-ambient poster="assets/clips/fan-map-still.jpg" muted playsinline loop preload="none" aria-hidden="true"></video></div></div></figure>
+    <figure class="fan-phone" style="--i:1" role="listitem"><div class="phone phone--static" role="img" aria-label="Trade: the market’s listing cards, each shimmering in its rarity’s foil"><div class="screen"><video class="shot clip" data-clip="fan-trade" data-ambient poster="assets/clips/fan-trade-still.jpg" muted playsinline loop preload="none" aria-hidden="true"></video></div></div></figure>
+    <figure class="fan-phone" style="--i:2" role="listitem"><div class="phone phone--static" role="img" aria-label="Profile: your card with level, rank and a showcase of favourite jellies"><div class="screen"><video class="shot clip" data-clip="fan-profile" data-ambient poster="assets/clips/fan-profile-still.jpg" muted playsinline loop preload="none" aria-hidden="true"></video></div></div></figure>
+  </div>
+</section>
+
+<!-- ============ JELLIES ============ -->
+<section class="sec jellies" id="jellies" aria-labelledby="jellies-title">
+  <div class="wrap split-row split-row--flip jellies-row">
+    <div class="showcase reveal">
+      <div class="showcase-stage">
+        <i class="showcase-glow"></i>
+        <img class="showcase-jelly" id="showcase-jelly" data-jelly="tralalero-tralala" data-finish="diamond" alt="Tralalero Tralala in its Diamond finish" width="600" height="600">
+        <i class="showcase-shadow"></i>
+      </div>
+      <p class="showcase-name" id="showcase-name">Tralalero Tralala</p>
+      <p class="showcase-meta"><span class="chip chip--diamond" id="showcase-chip">Diamond</span><span class="rate-pill" id="showcase-rate"><i class="coin-ico coin-ico--sm"></i>+90/hr</span></p>
+      <p class="showcase-lore" id="showcase-lore">A sneaker shark that jogs through puddles and sings victory laps before breakfast.</p>
+      <div class="finishes" id="finishes" role="group" aria-label="Finish"></div>
+    </div>
+    <div class="copy">
+      <p class="eyebrow eyebrow--pink reveal">Every jelly</p>
+      <h2 class="split" id="jellies-title">28 jellies, six ways to shine</h2>
+      <p class="lede reveal">Each one comes in rarer finishes: iridescent Shiny, pencil-drawn Sketch and faceted Diamond. Rarer finishes earn more in your Den.</p>
+      <p class="small-hint reveal">Tap a jelly below to take a closer look.</p>
+    </div>
+  </div>
+  <div class="marquee" id="marquee" aria-label="All Squishrot jellies">
+    <div class="marquee-row" data-dir="left"></div>
+    <div class="marquee-row" data-dir="right"></div>
+  </div>
+</section>
+
+<!-- ============ SETS ============ -->
+<section class="band band--sets" id="sets" aria-labelledby="sets-title">
+  <div class="specks" data-specks="40" aria-hidden="true"></div>
+  <div class="wrap center">
+    <p class="eyebrow eyebrow--gold reveal">Sets</p>
+    <h2 class="split" id="sets-title">Finish a set, boost your Den</h2>
+    <p class="lede reveal">Collect the right jellies for a coin bonus and a lasting boost to everything your Den earns.</p>
+  </div>
+  <div class="wrap set-grid">
+    <article class="set-card reveal" style="--c1:#3d6fd6;--c2:#1a2d5c">
+      <p class="set-kind">Roster set</p><h3>Common crew</h3><p class="set-desc">Every Common jelly</p>
+      <p class="set-reward">+400 coins · +1% Den boost</p>
+      <div class="set-bar"><i style="--p:72%"></i></div><p class="set-progress">18 of 25</p>
+      <img class="set-peek" data-jelly="tralalero-tralala" data-finish="common" data-size="sm" alt="">
+    </article>
+    <article class="set-card reveal" style="--c1:#e8741c;--c2:#7a3109">
+      <p class="set-kind">Group set</p><h3>Bouncy bunch</h3><p class="set-desc">Nine jellies who never sit still</p>
+      <p class="set-reward">+500 coins · +1% Den boost</p>
+      <div class="set-bar"><i style="--p:66%"></i></div><p class="set-progress">6 of 9</p>
+      <img class="set-peek" data-jelly="arancino-muscolino" data-finish="common" data-size="sm" alt="">
+    </article>
+    <article class="set-card reveal" style="--c1:#13a39a;--c2:#0b4d4f">
+      <p class="set-kind">Group set</p><h3>Lazy lounge</h3><p class="set-desc">Nine jellies who'd rather nap</p>
+      <p class="set-reward">+500 coins · +1% Den boost</p>
+      <div class="set-bar"><i style="--p:44%"></i></div><p class="set-progress">4 of 9</p>
+      <img class="set-peek" data-jelly="capibarini-cocosini" data-finish="common" data-size="sm" alt="">
+    </article>
+    <article class="set-card reveal" style="--c1:#9c45e8;--c2:#3e1670">
+      <p class="set-kind">Group set</p><h3>Nervous nest</h3><p class="set-desc">Seven jellies who jump at shadows</p>
+      <p class="set-reward">+500 coins · +1% Den boost</p>
+      <div class="set-bar"><i style="--p:71%"></i></div><p class="set-progress">5 of 7</p>
+      <img class="set-peek" data-jelly="matitino-piedino" data-finish="common" data-size="sm" alt="">
+    </article>
+    <article class="set-card reveal" style="--c1:#d9a128;--c2:#6b4508">
+      <p class="set-kind">Spectrum set</p><h3>Bobrito Bandito</h3><p class="set-desc">Five finishes of one jelly</p>
+      <p class="set-reward">+1,500 coins · 15 gems · +1%</p>
+      <div class="set-bar"><i style="--p:60%"></i></div><p class="set-progress">3 of 5</p>
+      <img class="set-peek" data-jelly="bobrito-bandito" data-finish="shiny" data-size="sm" alt="">
+    </article>
+    <article class="set-card set-card--ice reveal" style="--c1:#5fb8f0;--c2:#173d63">
+      <p class="set-kind">Roster set</p><h3>Diamond dynasty</h3><p class="set-desc">Every Diamond jelly</p>
+      <p class="set-reward">+15,000 coins · 100 gems · +5%</p>
+      <div class="set-bar"><i style="--p:8%"></i></div><p class="set-progress">2 of 25</p>
+      <img class="set-peek" data-jelly="muscular-orca" data-finish="diamond" data-size="sm" alt="">
+    </article>
+  </div>
+</section>
+
+<!-- ============ PRO ============ -->
+<section class="band band--pro" id="pro" aria-labelledby="pro-title">
+  <div class="specks" data-specks="40" aria-hidden="true"></div>
+  <div class="floaties" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="wrap center">
+    <p class="eyebrow eyebrow--purple reveal">Squishrot Pro</p>
+    <h2 class="split" id="pro-title">More drops, more reach, more Den</h2>
+    <div class="price reveal"><b>$4.99</b><span>a month<br>cancel anytime</span></div>
+  </div>
+  <div class="wrap perk-grid">
+    <article class="perk reveal"><i class="perk-ico perk-ico--drop"></i><h3>Daily Pro drop</h3><p>A Rare-or-better jelly waiting for you every day.</p></article>
+    <article class="perk reveal"><i class="perk-ico perk-ico--reach"></i><h3>150&thinsp;m reach</h3><p>Open drops from further away, up from 80&thinsp;m.</p></article>
+    <article class="perk reveal"><i class="perk-ico perk-ico--trade"></i><h3>Unlimited trading</h3><p>Make offers and list jellies as often as you like.</p></article>
+    <article class="perk reveal"><i class="perk-ico perk-ico--den"></i><h3>Four more Den spots</h3><p>More jellies on the bed, more coins coming in.</p></article>
+    <article class="perk reveal"><i class="perk-ico perk-ico--freeze"></i><h3>Streak freezes</h3><p>Two a month, so a missed day doesn't end your streak.</p></article>
+    <article class="perk reveal"><i class="perk-ico perk-ico--treasure"></i><h3>Showcase and treasure</h3><p>An 8-jelly showcase, a Pro badge and monthly treasure.</p></article>
+  </div>
+  <p class="wrap fine reveal">Prices shown in US dollars and may vary by country. Squishrot Pro renews every month unless cancelled at least 24 hours before the period ends. Manage or cancel it in your App Store account settings.</p>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="sec faq" id="faq" aria-labelledby="faq-title">
+  <div class="wrap center">
+    <p class="eyebrow eyebrow--green reveal">FAQ</p>
+    <h2 class="split" id="faq-title">Good questions</h2>
+  </div>
+  <div class="wrap faq-list">
+    <details class="reveal"><summary>Is Squishrot free?</summary><p>Yes. Squishrot is free to download and play. Coin packs and Squishrot Pro are optional in-app purchases.</p></details>
+    <details class="reveal"><summary>Do I have to walk around to play?</summary><p>Drops appear around wherever you are, so you can play anywhere. Walk within 80&nbsp;m of a drop and hold it to open it. Pro stretches your reach to 150&nbsp;m.</p></details>
+    <details class="reveal"><summary>Can other players see where I am?</summary><p>No. Squishrot uses your location only while you play, to place drops around you. Your location is never shown to other players.</p></details>
+    <details class="reveal"><summary>How does trading work?</summary><p>Sign in, list the jellies you want to swap and make offers on other players' listings. Free players can make two offers a week, and Pro unlocks unlimited trading and listings.</p></details>
+    <details class="reveal"><summary>Is Squishrot OK for younger players?</summary><p>Players under their country's age of digital consent play on their phone only, with no account, trading or purchases without a grown-up's check. There's no chat between players, names and listing notes are filtered, and anything can be reported.</p></details>
+    <details class="reveal"><summary>How do I cancel Pro?</summary><p>Pro renews every month unless you cancel at least 24 hours before the period ends. Manage or cancel it any time in your App Store account settings.</p></details>
+    <details class="reveal"><summary>How do I delete my account?</summary><p>In the app, go to Profile, then Settings, then Delete account. Need a hand? Email <a href="mailto:support@squishrot.com">support@squishrot.com</a>.</p></details>
+  </div>
+</section>
+
+<!-- ============ FINAL ============ -->
+<section class="final" id="get" aria-labelledby="get-title">
+  <div class="specks" data-specks="60" aria-hidden="true"></div>
+  <div class="final-jellies" aria-hidden="true">
+    <img data-jelly="tralalero-tralala" data-finish="shiny" style="--x:8%;--y:22%;--s:1;--d:0s" alt="">
+    <img data-jelly="la-vaca-saturno-saturnita" data-finish="diamond" style="--x:84%;--y:16%;--s:1.1;--d:-2s" alt="">
+    <img data-jelly="chimpanzini-bananini" data-finish="common" style="--x:14%;--y:64%;--s:.8;--d:-4s" alt="">
+    <img data-jelly="glorbo-fruttodrillo" data-finish="sketch" style="--x:80%;--y:60%;--s:.9;--d:-1s" alt="">
+  </div>
+  <div class="wrap center final-copy">
+    <img class="final-icon reveal" src="assets/img/icon.png" alt="" width="132" height="132" loading="lazy">
+    <h2 class="split final-title" id="get-title">Your first jelly is nearby</h2>
+    <p class="lede reveal">Open the map and see who's hiding around the corner.</p>
+    <div class="reveal"><a class="store-badge store-badge--lg" href="#get" data-store><svg viewBox="0 0 384 512" aria-hidden="true"><path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg><span><small data-store-top>Coming soon to the</small><b>App Store</b></span></a></div>
+    <p class="final-meta reveal">Free · iPhone · In-app purchases</p>
+  </div>
+  <footer class="footer">
+    <div class="wrap footer-row">
+      <p>© 2026 Squishrot · Made with a lot of jelly</p>
+      <nav aria-label="Help"><a href="support.html">Support</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="mailto:support@squishrot.com">support@squishrot.com</a></nav>
+    </div>
+  </footer>
+</section>
+
+</main>
+
+</body></html>
