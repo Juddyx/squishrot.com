@@ -1,6 +1,7 @@
 /* Squishrot — squishrot.com
-   Hero jelly pile (the app's own, from jelly-pit.js), live phone demos that only play while
-   their phone is on screen, the jelly showcase and the usual scroll reveals. */
+   The app's page backdrop and its moving light behind everything, the hero jelly pile (the app's
+   own, from jelly-pit.js), live phone demos that only play while their phone is on screen, the
+   jelly showcase and the usual scroll reveals. */
 (() => {
   'use strict';
 
@@ -31,17 +32,105 @@
     });
   }
 
-  function fillSpecks() {
-    $$('.specks').forEach(box => {
+  /* ---------------- backdrop ---------------- */
+  /* The light that moves over the painted backdrop, laid out as the app lays it out
+     (PageBackdropView): the same numbers, the same noise for where each speck sits, so the site and
+     the app stand on the same sky. Three slow glows wander and breathe, three shafts of light lean
+     in from the top left, dust rises at three depths, a few stars flare and two fall. All of it is
+     moved by CSS (site.css, "Backdrop"). */
+  function initBackdrop() {
+    const box = $('.backdrop-light');
+    if (!box) return;
+    const noise = n => { const x = Math.sin(n * 12.9898 + 78.233) * 43758.5453; return x - Math.floor(x); };
+    const TAU = Math.PI * 2;
+    const f = (v, d = 2) => (+v).toFixed(d);
+    const lights = ['140, 255, 230', '153, 199, 255', '255, 168, 235'];
+    /* A sine swing as an alternating animation: half a turn each way, begun part-way round. */
+    const half = omega => f(Math.PI / omega) + 's';
+    const begun = (omega, theta) => f(-(((theta % TAU) + TAU) % TAU) / omega) + 's';
+
+    /* Glows and shafts are small canvases stretched large: soft light needs few pixels. */
+    const glows = [['0, 191, 158', .2, .24, .4, .15, .13, 0], ['26, 102, 255', .78, .5, .44, .16, .1, 2], ['204, 31, 184', .3, .76, .4, .11, .115, 4]]
+      .map(([c, x, y, r, op, speed, phase]) => {
+        const cv = document.createElement('canvas'), g = cv.getContext('2d');
+        cv.width = cv.height = 192; cv.className = 'bd-glow';
+        const paint = g.createRadialGradient(96, 96, 0, 96, 96, 96);
+        paint.addColorStop(0, `rgba(${c}, ${op})`); paint.addColorStop(.45, `rgba(${c}, ${op * .45})`); paint.addColorStop(1, `rgba(${c}, 0)`);
+        g.fillStyle = paint; g.fillRect(0, 0, 192, 192);
+        return { cv, x, y, r, speed, phase };
+      });
+    const shafts = [[.06, -.3, 1.25, .13, .05, 23, 0], [.4, -.42, .9, .11, .065, 31, 2.1], [-.16, -.6, 1.05, .095, .045, 27, 4.2]]
+      .map(([x, lean, width, op, sway, period, phase], i) => {
+        const cv = document.createElement('canvas'), g = cv.getContext('2d'), W = 96, H = 360;
+        cv.width = W; cv.height = H; cv.className = 'bd-shaft';
+        for (let row = 0; row < H; row++) {
+          const along = (row + .5) / H, reach = (16 + 79 * along) / 190 * W, s = Math.min(1, along / .08) * Math.pow(1 - along, 1.5);
+          const paint = g.createLinearGradient(W / 2 - reach, 0, W / 2 + reach, 0);
+          [[0, 0], [.3, .55], [.5, 1], [.7, .55], [1, 0]].forEach(([at, a]) => paint.addColorStop(at, `rgba(${lights[i]}, ${f(a * s, 4)})`));
+          g.fillStyle = paint; g.fillRect(0, row, W, 1);
+        }
+        return { cv, x, lean, width, op, sway, period, phase };
+      });
+
+    let lastW = 0, lastH = 0;
+    function lay() {
+      const w = box.clientWidth, h = box.clientHeight;
+      if (!w || !h || (w === lastW && Math.abs(h - lastH) < 120)) return;
+      lastW = w; lastH = h;
+      /* The app's counts are for a phone; a bigger screen gets more, up to two and a half times. */
+      const more = clamp(w * h / (400 * 870), 1, 2.5), count = n => Math.round(n * more);
+      box.textContent = '';
+      let out = '';
+
       const frag = document.createDocumentFragment();
-      const n = +box.dataset.specks || 30;
-      for (let i = 0; i < n; i++) {
-        const s = document.createElement('i');
-        s.style.cssText = `left:${rand(0, 100).toFixed(2)}%;top:${rand(0, 100).toFixed(2)}%;--s:${rand(1, 2.6).toFixed(1)}px;--o:${rand(.3, .85).toFixed(2)};--t:${rand(2.5, 6.5).toFixed(1)}s;--d:${(-rand(0, 6)).toFixed(1)}s`;
-        frag.appendChild(s);
+      glows.forEach(({ cv, x, y, r, speed, phase }) => {
+        const side = Math.max(w, h) * r * 2, gx = document.createElement('i'), gy = document.createElement('i');
+        gx.className = 'bd-gx'; gy.className = 'bd-gy';
+        gx.style.cssText = `left:${x * 100}%;top:${y * 100}%;--dx:${f(w * .2, 1)}px;animation-duration:${half(speed)};animation-delay:${begun(speed, phase + Math.PI / 2)}`;
+        gy.style.cssText = `--dy:${f(h * .09, 1)}px;animation-duration:${half(speed * 1.3)};animation-delay:${begun(speed * 1.3, phase + Math.PI)}`;
+        cv.style.cssText = `width:${f(side, 0)}px;height:${f(side, 0)}px;margin:${f(-side / 2, 0)}px;animation-duration:${half(speed * 1.7)},${half(speed * 2.3)};animation-delay:${begun(speed * 1.7, phase + Math.PI / 2)},${begun(speed * 2.3, phase * 1.7 + Math.PI / 2)}`;
+        gy.appendChild(cv); gx.appendChild(gy); frag.appendChild(gx);
+      });
+      shafts.forEach(({ cv, x, lean, width, op, sway, period, phase }) => {
+        const length = h * 1.25, across = 190 * width * (length / 720), turn = TAU / period, breath = TAU / (period * .62);
+        cv.style.cssText = `left:${f(w * x, 1)}px;top:${f(-h * .12, 1)}px;width:${f(across, 1)}px;height:${f(length, 1)}px;margin-left:${f(-across / 2, 1)}px;` +
+          `--r:${lean}rad;--r0:${f(lean - sway, 3)}rad;--r1:${f(lean + sway, 3)}rad;--o:${f(op * .62, 3)};--o0:${f(op * .24, 3)};--o1:${op};` +
+          `animation-duration:${half(turn)},${half(breath)};animation-delay:${begun(turn, phase + Math.PI / 2)},${begun(breath, phase * 1.9 + Math.PI / 2)}`;
+        frag.appendChild(cv);
+      });
+
+      /* Dust: far (small, slow, faint), middle, and a few big soft hazes close to the glass. */
+      const mote = (n, i, side, x, speed, o0, o1, paint, haze) => {
+        const margin = side / 2 + 14, travel = h + margin * 2, from = noise(n + 5) * travel;
+        const glint = haze ? 3.5 + noise(n + 9) * 3 : Math.PI / (1.4 + noise(n + 9) * 2.2);
+        out += `<i class="bd-mote${haze ? ' bd-haze' : ''}" style="left:${f(x * 100)}%;width:${f(side)}px;height:${f(side)}px;margin:${f(-side / 2)}px;background:${paint};` +
+          `--y:${f(h + margin - from, 1)}px;--y0:${f(h + margin, 1)}px;--y1:${f(-margin, 1)}px;--o0:${o0};--o1:${o1};` + (haze ? '' : '--s0:.7;--s1:1.2;') +
+          `animation-duration:${f(travel / speed)}s,${f(glint)}s${haze ? `,${f((6 + noise(n + 5) * 5) / 2)}s` : ''};animation-delay:${f(-from / speed)}s,${f(-noise(n + 11) * glint * 2)}s${haze ? `,${f(-noise(n + 13) * 8)}s` : ''}"></i>`;
+      };
+      const dot = a => `radial-gradient(closest-side,rgba(255,255,255,${a}) 35%,rgba(255,255,255,0))`;
+      for (let i = 0; i < count(24); i++) { const n = i + 200; mote(n, i, 1.4 + noise(n + 7) * 1.4, noise(n), 2.2 + noise(n + 2) * 3, .1, .5, dot(.45)); }
+      for (let i = 0; i < count(32); i++) mote(i, i, 2 + noise(i + 7) * 3.5, noise(i), (10 + noise(i + 2) * 20) * .45, .15, .75, dot([1, .7, .45][i % 3]));
+      for (let i = 0; i < count(7); i++) {
+        const n = i + 400, c = [...lights, '255, 255, 255'][i % 4];
+        mote(n, i, 22 + noise(n + 7) * 30, .04 + noise(n) * .92, 17 + noise(n + 2) * 16, .16, .34,
+          `radial-gradient(closest-side,rgba(${c},.5),rgba(${c},.36) 35%,rgba(${c},.12) 70%,rgba(${c},0))`, true);
       }
+      /* Stars that flare now and then. */
+      for (let i = 0; i < count(7); i++) {
+        const n = i + 600, side = 11 + noise(n + 3) * 10, period = 6.5 + noise(n + 2) * 7;
+        out += `<i class="bd-flare" style="left:${f((.06 + noise(n) * .88) * 100)}%;top:${f((.08 + noise(n + 1) * .8) * 100)}%;width:${f(side)}px;height:${f(side)}px;margin:${f(-side / 2)}px;` +
+          `--c:${lights[i % 3]};animation-duration:${f(period)}s;animation-delay:${f(-noise(n + 4) * period)}s"></i>`;
+      }
+      /* Two falling stars, each on its own long clock. */
+      [[-.1, .1, .82, .38, 1, 'a'], [.3, .52, 1.12, .78, .8, 'b']].forEach(([x0, y0, x1, y1, k, name]) => {
+        out += `<i class="bd-fall bd-fall--${name}" style="--k:${k};--x0:${f(w * x0, 1)}px;--y0:${f(h * y0, 1)}px;--x1:${f(w * x1, 1)}px;--y1:${f(h * y1, 1)}px;--r:${f(Math.atan2(h * (y1 - y0), w * (x1 - x0)), 3)}rad"></i>`;
+      });
       box.appendChild(frag);
-    });
+      box.insertAdjacentHTML('beforeend', out);
+    }
+    lay();
+    let wait = 0;
+    addEventListener('resize', () => { clearTimeout(wait); wait = setTimeout(lay, 250); });
   }
 
   /* ---------------- header ---------------- */
@@ -554,7 +643,7 @@
     if (!useAvif) {
       $$('img[src$=".avif"]').forEach(im => { im.src = im.src.replace(/(-sm)?\.avif$/, '-sm.png'); });
     }
-    fillSpecks();
+    initBackdrop();
     hydrateJellies();
     initNav();
     initCounts();

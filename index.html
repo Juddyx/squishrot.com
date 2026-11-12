@@ -3,6 +3,8 @@
   <!-- Paste the App Store link here once Squishrot is live. Every store button switches from "Coming soon" to "Download". -->
   <meta name="app-store-url" content="">
   <link rel="preload" href="assets/fonts/plus-jakarta-sans-800.woff" as="font" type="font/woff" crossorigin>
+  <link rel="preload" as="image" type="image/avif" href="assets/img/backdrop-wide.avif" media="(min-aspect-ratio: 1/1)">
+  <link rel="preload" as="image" type="image/avif" href="assets/img/backdrop-tall.avif" media="not all and (min-aspect-ratio: 1/1)">
   <link rel="stylesheet" href="assets/css/site.css">
   <script>
     /* AVIF check: jelly art is AVIF, with PNG for the few browsers without it. */
@@ -35,8 +37,17 @@
   <script src="assets/js/data.js" defer></script>
   <script src="assets/js/jelly-pit.js" defer></script>
   <script src="assets/js/site.js" defer></script>
+<!-- ============ BACKDROP: the app's page backdrop, behind the whole site ============ -->
+<!-- The painting is the app's own (PageBackdropArt), tall for upright screens and laid out again for
+     wide ones; the light that moves over it is built in site.js, as PageBackdropView builds it. -->
+<div class="backdrop" aria-hidden="true">
+  <picture><source media="(min-aspect-ratio: 1/1)" type="image/avif" srcset="assets/img/backdrop-wide.avif"><source media="(min-aspect-ratio: 1/1)" srcset="assets/img/backdrop-wide.jpg"><source type="image/avif" srcset="assets/img/backdrop-tall.avif"><img class="backdrop-art" src="assets/img/backdrop-tall.jpg" alt="" decoding="async" onload="this.classList.add('is-in')"></picture>
+  <div class="backdrop-light"></div>
+</div>
+
 <!-- ============ OPENING: the app's first screen ============ -->
 <div class="opening" id="opening" role="dialog" aria-modal="true" aria-label="Squishrot" aria-describedby="opening-how" tabindex="-1">
+  <picture class="opening-ground" aria-hidden="true"><source media="(min-aspect-ratio: 1/1)" type="image/avif" srcset="assets/img/backdrop-wide.avif"><source media="(min-aspect-ratio: 1/1)" srcset="assets/img/backdrop-wide.jpg"><source type="image/avif" srcset="assets/img/backdrop-tall.avif"><img src="assets/img/backdrop-tall.jpg" alt="" decoding="async"></picture>
   <div class="opening-hello">
     <div class="opening-dust" aria-hidden="true"></div>
     <div class="opening-glow" aria-hidden="true"><i></i><i></i></div>
@@ -115,7 +126,6 @@
 
 <!-- ============ HERO ============ -->
 <section class="hero" id="top" aria-labelledby="hero-title">
-  <div class="specks" data-specks="60" aria-hidden="true"></div>
   <div class="hero-glow" aria-hidden="true"></div>
   <div class="hero-pit" id="pit" aria-hidden="true"></div>
 
@@ -168,8 +178,6 @@
 
 <!-- ============ DEN ============ -->
 <section class="band band--den" id="den" aria-labelledby="den-title">
-  <div class="specks" data-specks="40" aria-hidden="true"></div>
-  <div class="floaties" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
   <div class="wrap split-row split-row--flip">
     <div class="phone-slot reveal">
       <div class="phone" id="phone-den" role="img" aria-label="The Den: jellies drop onto the slime and bounce, their coins fly into the count, and Collect pours them into the wallet.">
@@ -194,8 +202,6 @@
 
 <!-- ============ TRADE ============ -->
 <section class="band band--trade" id="trade" aria-labelledby="trade-title">
-  <div class="specks" data-specks="40" aria-hidden="true"></div>
-  <div class="floaties" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
   <div class="wrap split-row">
     <div class="copy">
       <p class="eyebrow eyebrow--sky reveal">Trade</p>
@@ -220,8 +226,6 @@
 
 <!-- ============ BLENDER ============ -->
 <section class="band band--blender" id="blender" aria-labelledby="blender-title">
-  <div class="specks" data-specks="40" aria-hidden="true"></div>
-  <div class="floaties" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
   <div class="wrap split-row split-row--flip">
     <div class="phone-slot reveal">
       <div class="phone" id="phone-blender" role="img" aria-label="The Blender: three Shiny jellies drop into the jar, it blends, and holding the new ball reveals a Diamond Job Job Job Sahur.">
@@ -289,7 +293,6 @@
 
 <!-- ============ SETS ============ -->
 <section class="band band--sets" id="sets" aria-labelledby="sets-title">
-  <div class="specks" data-specks="40" aria-hidden="true"></div>
   <div class="wrap center">
     <p class="eyebrow eyebrow--gold reveal">Sets</p>
     <h2 class="split" id="sets-title">Finish a set, boost your Den</h2>
@@ -337,8 +340,6 @@
 
 <!-- ============ PRO ============ -->
 <section class="band band--pro" id="pro" aria-labelledby="pro-title">
-  <div class="specks" data-specks="40" aria-hidden="true"></div>
-  <div class="floaties" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
   <div class="wrap center">
     <p class="eyebrow eyebrow--purple reveal">Squishrot Pro</p>
     <h2 class="split" id="pro-title">More drops, more reach, more Den</h2>
@@ -374,7 +375,6 @@
 
 <!-- ============ FINAL ============ -->
 <section class="final" id="get" aria-labelledby="get-title">
-  <div class="specks" data-specks="60" aria-hidden="true"></div>
   <div class="final-jellies" aria-hidden="true">
     <img data-jelly="tralalero-tralala" data-finish="shiny" style="--x:8%;--y:22%;--s:1;--d:0s" alt="">
     <img data-jelly="la-vaca-saturno-saturnita" data-finish="diamond" style="--x:84%;--y:16%;--s:1.1;--d:-2s" alt="">

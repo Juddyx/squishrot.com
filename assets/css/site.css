@@ -34,7 +34,7 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + env(safe-area-inset-top, 0px)); -webkit-text-size-adjust: 100%; }
-body { margin: 0; background: var(--bg); color: var(--text); font: 500 17px/1.6 var(--font); -webkit-font-smoothing: antialiased; overflow-x: clip; }
+body { margin: 0; background: var(--bg-2); color: var(--text); font: 500 17px/1.6 var(--font); -webkit-font-smoothing: antialiased; overflow-x: clip; }
 img { display: block; max-width: 100%; }
 a { color: inherit; }
 h1, h2, h3 { margin: 0; font-weight: 800; letter-spacing: -.035em; line-height: 1.04; text-wrap: balance; }
@@ -109,29 +109,51 @@ button { font: inherit; color: inherit; }
 .green-text { font-style: normal; }
 .green-text .wi, .no-split .green-text { background: linear-gradient(180deg, #a9f7c7 0%, #3ddc78 52%, #17a34c 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 
-/* ---------- Twinkling specks, floating bubbles ---------- */
-.specks { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-.specks i { position: absolute; width: var(--s); height: var(--s); border-radius: 50%; background: #fff; opacity: .1; animation: twinkle var(--t) ease-in-out infinite var(--d); }
-@keyframes twinkle { 0%, 100% { opacity: .08; } 50% { opacity: var(--o); } }
-.floaties { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
-.floaties { --tint: 255, 255, 255; }
-.band--den .floaties { --tint: 255, 120, 200; }
-.band--trade .floaties { --tint: 127, 213, 255; }
-.band--blender .floaties { --tint: 110, 240, 160; }
-.band--pro .floaties { --tint: 190, 150, 255; }
-.floaties i { position: absolute; bottom: -80px; border-radius: 50%; background: radial-gradient(circle at 31% 27%, rgba(255, 255, 255, .85) 0 9%, rgba(var(--tint), .22) 11% 46%, rgba(var(--tint), .08) 72%); box-shadow: inset 0 0 0 1.5px rgba(var(--tint), .45), 0 0 18px rgba(var(--tint), .18); animation: floatup var(--t) linear infinite var(--d); }
-.floaties i:nth-child(1) { left: 7%; width: 34px; height: 34px; --t: 17s; --d: -2s; }
-.floaties i:nth-child(2) { left: 23%; width: 16px; height: 16px; --t: 12s; --d: -7s; }
-.floaties i:nth-child(3) { left: 52%; width: 26px; height: 26px; --t: 20s; --d: -11s; }
-.floaties i:nth-child(4) { left: 78%; width: 42px; height: 42px; --t: 23s; --d: -4s; }
-.floaties i:nth-child(5) { left: 92%; width: 18px; height: 18px; --t: 14s; --d: -9s; }
-@keyframes floatup { 0% { transform: translate(0, 0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translate(34px, -1150px); opacity: 0; } }
+/* ---------- Backdrop: the app's page backdrop ---------- */
+/* One painting of deep space behind the whole site, held still while the pages scroll over it, as
+   every page in the app stands on it. The moving light (glows, shafts, dust at three depths, flaring
+   and falling stars) is laid out in site.js from the app's own numbers and moved here; only
+   translate, scale, rotate and opacity ever change, so none of it repaints. */
+.backdrop { position: fixed; top: 0; left: 0; z-index: -1; width: 100%; height: 100vh; height: 100lvh; overflow: hidden; contain: strict; pointer-events: none; background: var(--bg-2); }
+.backdrop picture, .opening-ground { position: absolute; inset: 0; display: block; }
+.backdrop-art, .opening-ground img { width: 100%; height: 100%; max-width: none; object-fit: cover; }
+.js .backdrop-art { opacity: 0; transition: opacity .45s ease-out; }
+.js .backdrop-art.is-in { opacity: 1; }
+.backdrop-light { position: absolute; inset: 0; }
+.backdrop-light i, .backdrop-light canvas { position: absolute; top: 0; left: 0; display: block; }
+.bd-gx { animation: bd-sway-x 1s cubic-bezier(.37, 0, .63, 1) infinite alternate; }
+.bd-gy { animation: bd-sway-y 1s cubic-bezier(.37, 0, .63, 1) infinite alternate; }
+.bd-glow { opacity: .72; animation: bd-swell 1s cubic-bezier(.37, 0, .63, 1) infinite alternate, bd-glow 1s cubic-bezier(.37, 0, .63, 1) infinite alternate; }
+.bd-shaft { transform-origin: 50% 0; rotate: var(--r); opacity: var(--o); animation: bd-lean 1s cubic-bezier(.37, 0, .63, 1) infinite alternate, bd-breathe 1s cubic-bezier(.37, 0, .63, 1) infinite alternate; }
+.bd-mote { border-radius: 50%; translate: 0 var(--y); opacity: var(--o0); animation: bd-rise 1s linear infinite, bd-twinkle 1s ease-in-out infinite alternate; }
+.bd-haze { animation: bd-rise 1s linear infinite, bd-twinkle 1s ease-in-out infinite alternate, bd-drift 1s ease-in-out infinite alternate; }
+.bd-flare { opacity: 0; background: radial-gradient(closest-side, rgba(var(--c), .3), rgba(var(--c), 0)); animation: bd-flare 1s linear infinite; }
+.bd-flare::after { content: ""; position: absolute; inset: 0; background: rgb(var(--c)); background: color-mix(in srgb, rgb(var(--c)) 40%, #fff);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 -1 2 2'%3E%3Cpath d='M0-1Q.13-.13 1 0Q.13.13 0 1Q-.13.13-1 0Q-.13-.13 0-1Z'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 -1 2 2'%3E%3Cpath d='M0-1Q.13-.13 1 0Q.13.13 0 1Q-.13.13-1 0Q-.13-.13 0-1Z'/%3E%3C/svg%3E") center / contain no-repeat; }
+.bd-fall { width: calc(130px * var(--k)); height: calc(8px * var(--k)); margin: calc(-4px * var(--k)) 0 0 calc(-130px * var(--k)); transform-origin: 100% 50%; rotate: var(--r); opacity: 0;
+  background: radial-gradient(closest-side, #fff 28%, rgba(200, 236, 255, .55) 52%, rgba(200, 236, 255, 0)) right center / calc(8px * var(--k)) 100% no-repeat,
+    linear-gradient(90deg, rgba(153, 217, 255, 0), rgba(191, 235, 255, .5) 70%, #fff) left center / calc(100% - 4px * var(--k)) 34% no-repeat; }
+.bd-fall--a { animation: bd-fall-a 13s linear -9.5s infinite; }
+.bd-fall--b { animation: bd-fall-b 21s linear -3s infinite; }
+@keyframes bd-sway-x { from { translate: calc(var(--dx) * -1) 0; } to { translate: var(--dx) 0; } }
+@keyframes bd-sway-y { from { translate: 0 calc(var(--dy) * -1); } to { translate: 0 var(--dy); } }
+@keyframes bd-swell { from { scale: .82; } to { scale: 1.18; } }
+@keyframes bd-glow { from { opacity: .44; } to { opacity: 1; } }
+@keyframes bd-lean { from { rotate: var(--r0); } to { rotate: var(--r1); } }
+@keyframes bd-breathe { from { opacity: var(--o0); } to { opacity: var(--o1); } }
+@keyframes bd-rise { from { translate: 0 var(--y0); } to { translate: 0 var(--y1); } }
+@keyframes bd-twinkle { from { opacity: var(--o0); scale: var(--s0, 1); } to { opacity: var(--o1); scale: var(--s1, 1); } }
+@keyframes bd-drift { from { transform: translateX(-18px); } to { transform: translateX(18px); } }
+@keyframes bd-flare { 0%, 2% { opacity: 0; scale: .3; rotate: 0rad; } 7% { opacity: .62; scale: 1.1; } 10% { opacity: .2; scale: .8; } 13% { opacity: .5; scale: 1; } 20%, 100% { opacity: 0; scale: .4; rotate: .5rad; } }
+@keyframes bd-fall-a { 0% { translate: var(--x0) var(--y0); opacity: 0; animation-timing-function: ease-in; } 1.25% { opacity: .85; } 4.85% { opacity: .85; } 6.92%, 100% { translate: var(--x1) var(--y1); opacity: 0; } }
+@keyframes bd-fall-b { 0% { translate: var(--x0) var(--y0); opacity: 0; animation-timing-function: ease-in; } .9% { opacity: .85; } 3.5% { opacity: .85; } 5%, 100% { translate: var(--x1) var(--y1); opacity: 0; } }
 
 /* ---------- Hero ---------- */
 /* The jellies stand on a floor --hero-floor up from the bottom, with the hint under them. Below 900px
    they pile across the full width under the copy, so the hero keeps room for them there. */
 .hero { position: relative; overflow: hidden; display: flex; align-items: center; min-height: max(100svh, 740px); padding: calc(var(--nav-h) + 36px) 0 calc(var(--hero-floor) + 230px);
-  background: radial-gradient(80% 60% at 82% 100%, rgba(184, 71, 255, .2), transparent 62%), radial-gradient(60% 50% at 6% 92%, rgba(34, 197, 94, .14), transparent 60%), radial-gradient(50% 40% at 50% -10%, rgba(127, 213, 255, .08), transparent 70%), var(--bg); }
+  background: radial-gradient(80% 60% at 82% 100%, rgba(184, 71, 255, .12), transparent 62%), radial-gradient(60% 50% at 6% 92%, rgba(34, 197, 94, .08), transparent 60%); }
 .hero-glow { position: absolute; left: 50%; bottom: calc(var(--hero-floor) - 130px); z-index: 0; width: min(1200px, 120vw); height: 260px; translate: -50% 0; border-radius: 50%; background: radial-gradient(closest-side, rgba(244, 124, 196, .28), transparent); filter: blur(20px); pointer-events: none; }
 .hero-pit { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .hero-pit .pit-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
@@ -175,7 +197,7 @@ button { font: inherit; color: inherit; }
 .spark { position: absolute; z-index: 4; background: var(--c); clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%); pointer-events: none; }
 
 /* ---------- Proof bar ---------- */
-.proof { position: relative; z-index: 2; padding: 46px 0; background: var(--bg-2); box-shadow: inset 0 1px 0 var(--line), inset 0 -1px 0 var(--line); }
+.proof { position: relative; z-index: 2; padding: 46px 0; background: rgba(16, 16, 19, .62); box-shadow: inset 0 1px 0 var(--line), inset 0 -1px 0 var(--line); }
 .proof-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; text-align: center; }
 .stat b { display: block; font-size: clamp(34px, 4vw, 48px); font-weight: 800; letter-spacing: -.045em; line-height: 1.05; }
 .stat > span { color: var(--muted); font-size: 14px; font-weight: 700; }
@@ -186,15 +208,14 @@ button { font: inherit; color: inherit; }
 
 /* ---------- Sections ---------- */
 .sec { position: relative; padding: clamp(96px, 12vw, 150px) 0; }
-.band { position: relative; overflow: hidden; display: flex; align-items: center; min-height: min(100svh, 980px); padding: clamp(96px, 12vw, 150px) 0; box-shadow: inset 0 1px 0 var(--line); }
+.band { position: relative; overflow: hidden; display: flex; align-items: center; min-height: min(100svh, 980px); padding: clamp(96px, 12vw, 150px) 0; }
 .band > .wrap, .sec > .wrap { position: relative; z-index: 2; }
-.band--den { background: radial-gradient(55% 65% at 26% 55%, rgba(255, 92, 184, .2), transparent 70%), radial-gradient(45% 55% at 86% 18%, rgba(184, 71, 255, .17), transparent 70%), #110d16; }
-.band--trade { background: radial-gradient(55% 65% at 74% 50%, rgba(127, 213, 255, .15), transparent 70%), radial-gradient(45% 55% at 8% 82%, rgba(90, 120, 255, .13), transparent 70%), #0b1116; }
-.band--blender { background: radial-gradient(55% 65% at 26% 55%, rgba(34, 197, 94, .18), transparent 70%), radial-gradient(40% 50% at 88% 86%, rgba(120, 255, 180, .07), transparent 70%), #0a120d; }
-.band--sets { display: block; background: radial-gradient(60% 55% at 50% 0%, rgba(243, 198, 76, .13), transparent 70%), #12100b; }
-.band--pro { display: block; background: radial-gradient(55% 55% at 28% 8%, rgba(107, 133, 255, .22), transparent 70%), radial-gradient(55% 55% at 82% 92%, rgba(209, 107, 255, .2), transparent 70%), #100d1c; }
-.how, .faq { background: var(--bg); }
-.screens, .jellies { background: var(--bg-2); box-shadow: inset 0 1px 0 var(--line); }
+/* Each part keeps a wash of its own colour, as light on the backdrop rather than a wall in front of it. */
+.band--den { background: radial-gradient(55% 65% at 26% 55%, rgba(255, 92, 184, .12), transparent 70%), radial-gradient(45% 55% at 86% 18%, rgba(184, 71, 255, .1), transparent 70%); }
+.band--trade { background: radial-gradient(55% 65% at 74% 50%, rgba(127, 213, 255, .09), transparent 70%), radial-gradient(45% 55% at 8% 82%, rgba(90, 120, 255, .08), transparent 70%); }
+.band--blender { background: radial-gradient(55% 65% at 26% 55%, rgba(34, 197, 94, .11), transparent 70%); }
+.band--sets { display: block; background: radial-gradient(60% 55% at 50% 0%, rgba(243, 198, 76, .08), transparent 70%); }
+.band--pro { display: block; background: radial-gradient(55% 55% at 28% 8%, rgba(107, 133, 255, .13), transparent 70%), radial-gradient(55% 55% at 82% 92%, rgba(209, 107, 255, .12), transparent 70%); }
 .screens { overflow: hidden; }
 
 h2 { font-size: clamp(40px, 5.2vw, 68px); }
@@ -365,7 +386,7 @@ figure { margin: 0; }
 }
 
 /* ---------- Final ---------- */
-.final { position: relative; overflow: hidden; padding-top: clamp(120px, 14vw, 180px); background: radial-gradient(70% 55% at 50% 100%, rgba(244, 124, 196, .24), transparent 70%), radial-gradient(55% 45% at 50% 25%, rgba(34, 197, 94, .1), transparent 70%), var(--bg); box-shadow: inset 0 1px 0 var(--line); }
+.final { position: relative; overflow: hidden; padding-top: clamp(120px, 14vw, 180px); background: radial-gradient(70% 55% at 50% 100%, rgba(244, 124, 196, .2), transparent 70%), radial-gradient(55% 45% at 50% 25%, rgba(34, 197, 94, .06), transparent 70%); }
 .final-copy { position: relative; z-index: 3; padding-bottom: clamp(120px, 14vw, 180px); }
 .final-icon { width: 132px; height: 132px; margin: 0 auto 34px; border-radius: 30px; box-shadow: 0 0 0 1px rgba(255, 255, 255, .16), 0 22px 50px -14px rgba(34, 197, 94, .6); animation: bob 4.6s ease-in-out infinite; }
 .final-title { font-size: clamp(46px, 7vw, 92px); }
@@ -374,7 +395,7 @@ figure { margin: 0; }
 .final-jellies img { position: absolute; z-index: 2; left: var(--x); top: var(--y); width: calc(clamp(96px, 11vw, 160px) * var(--s)); filter: drop-shadow(0 18px 30px rgba(0, 0, 0, .5)); animation: float 7s ease-in-out infinite var(--d); }
 @keyframes float { 0%, 100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-24px) rotate(5deg); } }
 @media (max-width: 760px) { .final-jellies img:nth-child(n+3) { display: none; } .final-jellies img { top: calc(var(--y) * .6); } }
-.footer { position: relative; z-index: 3; padding: 26px 0 calc(26px + env(safe-area-inset-bottom)); background: #0a0a0c; }
+.footer { position: relative; z-index: 3; padding: 26px 0 calc(26px + env(safe-area-inset-bottom)); background: rgba(10, 10, 12, .78); box-shadow: inset 0 1px 0 var(--line); }
 .footer-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 28px; color: var(--dim); font-size: 14px; }
 .footer nav { display: flex; flex-wrap: wrap; gap: 6px 22px; }
 .footer a { display: inline-flex; align-items: center; min-height: 44px; color: var(--muted); font-weight: 700; text-decoration: none; }
@@ -406,7 +427,7 @@ html.opening-lock, html.opening-lock body { overflow: hidden; }
 .opening-hello { position: absolute; inset: 0; }
 /* Full: the site is underneath now, and taps go through to it. */
 .opening.is-covered { background: transparent; pointer-events: none; }
-.opening.is-covered .opening-hello, .opening.is-covered .opening-skip { visibility: hidden; }
+.opening.is-covered .opening-hello, .opening.is-covered .opening-skip, .opening.is-covered .opening-ground { visibility: hidden; }
 .opening.is-leaving { opacity: 0; pointer-events: none; transition: opacity .35s var(--ease-out); }
 
 /* Dust rising slowly and twinkling (FlowSparkleField's). */
@@ -529,6 +550,10 @@ html.opening-lock, html.opening-lock body { overflow: hidden; }
   .js .split:not(.in) .wi { transform: none; }
   .marquee { overflow-x: auto; -webkit-mask-image: none; mask-image: none; }
   .marquee-row { animation: none; }
+  /* The backdrop's light stands where it is: no falling stars, the flares left as faint stars. */
+  .backdrop-light i, .backdrop-light canvas { animation: none !important; }
+  .bd-fall { display: none; }
+  .bd-flare { opacity: .22; scale: .7; }
 }
 
 /* The opening for people who turn off motion: the logo, glow and dust simply there; a tap goes
