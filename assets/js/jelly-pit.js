@@ -1201,6 +1201,7 @@
           if (!movesBody(habit) || (counter.running === 0 && this.bodyGate <= 0)) {
             mind.habit = habit; mind.habitTime = 0; mind.hopsDone = 0;
             mind.habitDirection = world.directionFor(toy);
+            if (world.rigHabit) world.rigHabit(toy, habit);
             this.habitGate = 0.8;
             if (movesBody(habit)) { counter.running++; this.bodyGate = DURATION[habit] + 3; }
           }
@@ -1313,6 +1314,198 @@
       const side = unit() < 0 ? -1 : 1;
       mind.idleX = side * (0.5 + Math.abs(unit()) * 0.4);
       mind.idleY = unit() * 0.4;
+    }
+  }
+
+  // ---------------------------------------------------------------------------------------
+  // Skeletons (the app's JellyRig.swift). A jelly's Common picture is cut into layers: each limb
+  // a picture of its own behind the body, with the part hidden by the body painted in, and the
+  // body without them. Each limb turns at its joint and is laid through the soft body's own
+  // warp, so it squashes and wobbles with it. `RigActor` makes the poses: the moves every jelly
+  // shares (a cheer, a stretch and yawn, munching), arms flying up in the air, and a mouth and
+  // lids that move. Joints are in the 768-pixel picture, y down (window.SQUISH_RIGS, rigs.js).
+  const RIG_MARGIN = 24, RIG_SPACING = 26;
+  // 0 at `from`, 1 at `to` (either way round), eased.
+  const between = (from, to, v) => {
+    if (from === to) return v >= to ? 1 : 0;
+    const t = clamp((v - from) / (to - from), 0, 1);
+    return t * t * (3 - 2 * t);
+  };
+  const REST_FACE = () => ({ mouthOpen: 0, mouthRound: 0, mouthCurve: 0, lidSlant: 0, lidLow: 0, eyesWide: 0, smile: 0 });
+  const REST_POSE = () => ({ armLeft: 0, armRight: 0, legLeftSwing: 0, legLeftLift: 0, legRightSwing: 0, legRightLift: 0,
+    tail: 0, head: 0, rock: 0, squash: 0, face: REST_FACE() });
+  const POSE_LIMBS = ['armLeft', 'armRight', 'legLeftSwing', 'legLeftLift', 'legRightSwing', 'legRightLift', 'tail', 'head', 'rock', 'squash'];
+  const POSE_FACE = ['mouthOpen', 'mouthRound', 'mouthCurve', 'lidSlant', 'lidLow', 'eyesWide', 'smile'];
+  // Kept inside what a jelly's joints can do (JellyRigPose.fitted).
+  function fitPose(p) {
+    p.armLeft = clamp(p.armLeft, -0.45, 1.5); p.armRight = clamp(p.armRight, -0.45, 1.5);
+    p.legLeftSwing = clamp(p.legLeftSwing, -0.4, 0.4); p.legRightSwing = clamp(p.legRightSwing, -0.4, 0.4);
+    p.legLeftLift = clamp(p.legLeftLift, 0, 0.08); p.legRightLift = clamp(p.legRightLift, 0, 0.08);
+    p.tail = clamp(p.tail, -0.5, 0.7); p.head = clamp(p.head, -0.2, 0.2); p.rock = clamp(p.rock, -0.12, 0.12);
+    return p;
+  }
+  // A grid over each limb's layer and how far each corner turns with it (JellyRigSkin). `crop` is
+  // the shown part of the picture: x, y, width, height in its 768 pixels, y down.
+  function makeRigSkin(rig, crop) {
+    const layers = rig.limbs.map(limb => {
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (const [ax, ay, bx, by, radius] of limb.shape) {
+        const reach = radius + RIG_MARGIN;
+        x0 = Math.min(x0, ax - reach, bx - reach); x1 = Math.max(x1, ax + reach, bx + reach);
+        y0 = Math.min(y0, ay - reach, by - reach); y1 = Math.max(y1, ay + reach, by + reach);
+      }
+      x0 = Math.max(Math.floor(x0), crop.x); y0 = Math.max(Math.floor(y0), crop.y);
+      x1 = Math.min(Math.ceil(x1), crop.x + crop.w); y1 = Math.min(Math.ceil(y1), crop.y + crop.h);
+      const w = Math.max(1, x1 - x0), h = Math.max(1, y1 - y0);
+      const cols = Math.max(3, Math.ceil(w / RIG_SPACING)), rows = Math.max(3, Math.ceil(h / RIG_SPACING));
+      const count = (cols + 1) * (rows + 1), rest = new Float32Array(count * 2), turns = new Float32Array(count), uv = new Float32Array(count * 2);
+      const wx = limb.tip[0] - limb.pivot[0], wy = limb.tip[1] - limb.pivot[1], reach = Math.max(1, Math.hypot(wx, wy));
+      for (let row = 0, i = 0; row <= rows; row++) {
+        for (let col = 0; col <= cols; col++, i++) {
+          const x = x0 + (col / cols) * w, y = y1 - (row / rows) * h;          // rows from the bottom up
+          rest[i * 2] = x; rest[i * 2 + 1] = y;
+          const dx = x - limb.pivot[0], dy = y - limb.pivot[1];
+          turns[i] = limb.stiff ? between(0, limb.hinge, Math.hypot(dx, dy)) : between(-0.3 * limb.hinge, limb.hinge, (dx * wx + dy * wy) / reach);
+          uv[i * 2] = (x - crop.x) / crop.w; uv[i * 2 + 1] = 1 - (y - crop.y) / crop.h;
+        }
+      }
+      const index = new Uint16Array(cols * rows * 6);
+      for (let r = 0, k = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++, k += 6) {
+          const a = r * (cols + 1) + c, b = a + 1, d = a + cols + 1, e = d + 1;
+          index.set([a, b, d, b, e, d], k);
+        }
+      }
+      // Lifting it takes its tip up the picture, whichever side it hangs.
+      return { limb, cols, rows, count, rest, turns, uv, index, lift: limb.tip[0] < limb.pivot[0] ? 1 : -1, out: new Float32Array(count * 2) };
+    });
+    return { rig, crop, layers, point: [0, 0] };
+  }
+  // Where a point of the picture goes when the whole jelly tips its head and rocks over its feet.
+  // `restY` is where it is drawn, which says how much of each it takes; `head` is the share of the
+  // head's tip a limb takes (null for the body: more the higher up the head).
+  function settleRig(skin, x, y, restY, pose, head, out) {
+    const rig = skin.rig;
+    if (pose.head !== 0) {
+      const w = head === null ? between(rig.headBase, rig.headTop, restY) : head;
+      if (w > 0) {
+        const c = Math.cos(pose.head), s = Math.sin(pose.head), fx = x - rig.headPivot[0], fy = y - rig.headPivot[1];
+        x += w * (c * fx - s * fy + rig.headPivot[0] - x); y += w * (s * fx + c * fy + rig.headPivot[1] - y);
+      }
+    }
+    if (pose.rock !== 0) {
+      const w = between(rig.floor - 0.03 * skin.crop.h, rig.floor - 0.3 * skin.crop.h, restY);
+      if (w > 0) {
+        const c = Math.cos(pose.rock), s = Math.sin(pose.rock), fx = x - rig.stance, fy = y - rig.floor;
+        x += w * (c * fx - s * fy + rig.stance - x); y += w * (s * fx + c * fy + rig.floor - y);
+      }
+    }
+    out[0] = x; out[1] = y;
+  }
+  // The angle a limb is turned by and how far its foot is lifted, for a pose.
+  function limbTurn(layer, pose) {
+    let angle = 0, rise = 0;
+    switch (layer.limb.part) {
+      case 'armLeft': angle = pose.armLeft * layer.lift; break;
+      case 'armRight': angle = pose.armRight * layer.lift; break;
+      case 'tail': angle = pose.tail * layer.lift; break;
+      // A positive swing takes the foot to the right of the picture; a back leg steps with the
+      // front leg across from it.
+      case 'legLeft': case 'legBackRight': angle = -pose.legLeftSwing; rise = pose.legLeftLift; break;
+      case 'legRight': case 'legBackLeft': angle = -pose.legRightSwing; rise = pose.legRightLift; break;
+    }
+    return [angle * layer.limb.swing, rise];
+  }
+  const GESTURE_TIME = { cheer: 1.5, stretch: 2.2, gasp: 0.8, chew: 1.6 };
+  // Makes a jelly's poses from what it is doing (JellyRigActor): a gesture, flying through the air,
+  // or how it holds itself. Every channel is eased by a loose spring, so limbs overshoot and settle.
+  class RigActor {
+    constructor() {
+      this.posture = 'awake'; this.gesture = null; this.gestureTime = 0; this.clock = 0;
+      this.pose = REST_POSE(); this.rates = REST_POSE(); this.seed = Math.random(); this.settled = true;
+    }
+    play(gesture) { this.gesture = gesture; this.gestureTime = 0; }
+    // `flight`: how fast it flies, in its own heights a second (x right, y up), or null on the ground.
+    step(dt, flight, held) {
+      if (!(dt > 0)) return this.pose;
+      this.clock += dt;
+      const want = REST_POSE(), f = want.face;
+      if (this.posture === 'asleep') {
+        const breath = Math.sin((this.clock * TAU) / 3.8 + this.seed * 6);
+        want.armLeft = want.armRight = -0.26;
+        want.head = -0.07 + 0.012 * breath;
+        want.tail = -0.24;
+        want.squash = 0.05 + 0.02 * breath;
+        // The mouth falls open a little on each breath out.
+        f.mouthOpen = -0.8 + 0.3 * Math.max(0, -breath); f.mouthRound = 0.3; f.mouthCurve = 0.1; f.lidLow = 1;
+      }
+      // In the air: arms fly up the faster it falls, legs trail behind.
+      if (flight) {
+        const fall = clamp(-flight[1] / 5, 0, 1), rush = Math.min(1, Math.hypot(flight[0], flight[1]) / 6);
+        const up = held ? 0.35 : Math.max(0.25 + 0.6 * rush, fall);
+        want.armLeft += 0.95 * up; want.armRight += 0.95 * up;
+        const trail = clamp(-flight[0] / 4, -1, 1);
+        want.legLeftSwing += 0.3 * trail; want.legRightSwing += 0.3 * trail;
+        want.tail += 0.3 * rush;
+        if (!held) { f.mouthOpen += 0.75 * Math.max(fall, rush * 0.6); f.mouthRound += 0.55 * rush; }
+      }
+      // A gesture, over whatever else it is doing.
+      if (this.gesture) {
+        this.gestureTime += dt;
+        const t = this.gestureTime, length = GESTURE_TIME[this.gesture];
+        const arc = (rise, fall) => between(0, rise, t) * (1 - between(length - fall, length, t));
+        switch (this.gesture) {
+          case 'cheer': {
+            const up = arc(0.16, 0.45), shake = Math.sin(t * TAU * 4.2);
+            want.armLeft = up * (1.35 + 0.12 * shake); want.armRight = up * (1.35 - 0.12 * shake);
+            want.tail += 0.4 * up * shake;
+            want.squash -= 0.05 * up;
+            f.mouthOpen = 0.95 * up; f.mouthCurve = up; f.smile = 0.8 * up;
+            f.lidLow *= 1 - up; f.lidSlant *= 1 - up;
+            break;
+          }
+          case 'stretch': {
+            const up = arc(0.7, 0.6);
+            // The yawn comes and goes inside the stretch.
+            const yawn = between(0.25, 0.8, t) * (1 - between(1.3, 1.75, t));
+            want.armLeft = want.armRight = 1.1 * up;
+            want.head += -0.07 * up; want.tail += 0.3 * up; want.squash -= 0.06 * up;
+            f.mouthOpen = Math.max(f.mouthOpen, yawn); f.mouthRound = Math.max(f.mouthRound, 0.6 * yawn);
+            f.mouthCurve *= 1 - yawn; f.lidLow = Math.max(f.lidLow, 0.95 * yawn);
+            break;
+          }
+          case 'gasp': {
+            const up = arc(0.07, 0.3);
+            want.armLeft += 0.7 * up; want.armRight += 0.7 * up;
+            f.mouthOpen = 0.7 * up; f.mouthRound = 0.9 * up; f.eyesWide = up; f.lidLow *= 1 - up;
+            break;
+          }
+          case 'chew': {
+            const on = arc(0.15, 0.25), bite = Math.sin(t * TAU * 3.2);
+            f.mouthOpen = on * (-0.55 + 0.5 * bite); f.mouthRound = 0.25 * on; f.mouthCurve = 0.5 * on; f.smile = 0.4 * on;
+            want.head += 0.02 * on * bite;
+            break;
+          }
+        }
+        if (t >= length) this.gesture = null;
+      }
+      // Ease every channel toward what's wanted on a loose spring.
+      let moving = false;
+      const steps = Math.max(1, Math.ceil(dt * 120)), h = dt / steps;
+      const ease = (now, rates, key, target, quick, loose, still) => {
+        let value = now[key], rate = rates[key];
+        for (let i = 0; i < steps; i++) { rate += (quick * quick * (target - value) - 2 * loose * quick * rate) * h; value += rate * h; }
+        now[key] = value; rates[key] = rate;
+        if (Math.abs(target - value) > still || Math.abs(rate) > still * 4) moving = true;
+      };
+      for (const key of POSE_LIMBS) {
+        // Feet come down smartly; arms and tail swing looser.
+        const foot = key === 'legLeftLift' || key === 'legRightLift';
+        ease(this.pose, this.rates, key, want[key], foot ? 26 : 15, foot ? 0.85 : 0.5, 0.002);
+      }
+      for (const key of POSE_FACE) ease(this.pose.face, this.rates.face, key, f[key], 18, 0.8, 0.004);
+      this.settled = !moving;
+      return this.pose;
     }
   }
 
@@ -1464,19 +1657,52 @@
     uniform float u_blink, u_flow, u_time, u_alpha;
     uniform vec2 u_gaze;
     uniform vec3 u_gloss;
+    // The part of the jelly's whole picture this texture holds (its corner, then its size): all of
+    // it for the jelly itself, a small box for a limb's layer. Then the mouth (its middle, half its
+    // width and height), how it is held (open, round, corners; then the lids' slope) and the
+    // eyes' mood (wide, smiling), as the app's skeleton sets them.
+    uniform vec4 u_rect, u_mouth, u_talk;
+    uniform vec2 u_mood;
+    vec4 pic(vec2 p) { return texture2D(u_texture, (p - u_rect.xy) / u_rect.zw); }
     float rarityHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
     vec3 rarityHue(float h) { return clamp(abs(fract(vec3(h) + vec3(0.0, 0.667, 0.333)) * 6.0 - 3.0) - 1.0, 0.0, 1.0); }
     void main() {
       vec2 uv = v_tex_coord;
-      float originalAlpha = texture2D(u_texture, uv).a;
+      float originalAlpha = pic(uv).a;
       vec2 look = uv;
+      if (u_mouth.z > 0.0 && abs(u_talk.x) + abs(u_talk.y) + abs(u_talk.z) > 0.004) {
+        vec2 m = (uv - u_mouth.xy) / u_mouth.zw;
+        float inMouth = (1.0 - smoothstep(1.15, 1.75, abs(m.x))) * (1.0 - smoothstep(1.6, 2.3, abs(m.y)));
+        if (inMouth > 0.001) {
+          // Opening and shutting about the top lip: the mouth as drawn fills more or less of
+          // the room, the skin round it taking up the rest.
+          float lip = 0.45;
+          float tall = u_talk.x > 0.0 ? 1.0 + 0.62 * u_talk.x : 1.0 + 0.86 * u_talk.x;
+          float below = lip - m.y;
+          float span = below > 0.0 ? lip + 1.0 : 1.0 - lip;
+          float limit = below > 0.0 ? lip + 2.3 : 2.3 - lip;
+          float off = abs(below);
+          float drawn = span * tall;
+          float taken = off <= drawn ? off / tall : span + (off - drawn) * (limit - span) / (limit - drawn);
+          float y = lip - sign(below) * taken;
+          // Drawn in from the sides.
+          float wide = 1.0 - 0.42 * u_talk.y;
+          float ax = abs(m.x);
+          float sx = ax <= wide ? ax / wide : 1.0 + (ax - wide) * 0.75 / (1.75 - wide);
+          float x = sign(m.x) * sx;
+          // Corners up or down.
+          y -= u_talk.z * 0.5 * (x * x - 0.32) * (1.0 - smoothstep(1.0, 2.2, abs(m.y)));
+          look += (vec2(x, y) - m) * u_mouth.zw * inMouth;
+        }
+      }
       for (int eyeIndex = 0; eyeIndex < 2; eyeIndex++) {
         vec4 eye = eyeIndex == 0 ? u_leftEye : u_rightEye;
         vec2 q = (uv - eye.xy) / eye.zw;
         float pull = max(0.0, 1.0 - dot(q, q) * 0.444);
         look -= u_gaze * eye.zw * 0.38 * pull * pull;
+        look -= q * eye.zw * (1.0 - 1.0 / (1.0 + u_mood.x * 0.34 * pull * pull));
       }
-      vec4 color = texture2D(u_texture, look);
+      vec4 color = pic(look);
       float closure = u_blink;
       for (int eyeIndex = 0; eyeIndex < 2; eyeIndex++) {
         vec4 eye = eyeIndex == 0 ? u_leftEye : u_rightEye;
@@ -1484,16 +1710,43 @@
         float region = 1.0 - smoothstep(1.05, 1.30, length(q));
         if (region > 0.001 && closure > 0.001) {
           vec2 skinUV = eyeIndex == 0 ? u_skinSamples.xy : u_skinSamples.zw;
-          vec4 skin = texture2D(u_texture, skinUV);
+          vec4 skin = pic(skinUV);
           skin.rgb *= 1.0 + 0.035 * clamp(q.y, -1.0, 1.0);
+          // A lid held shut (asleep, a yawn) is rounded like the eye under it: lit toward its
+          // top, in shade round its edge.
+          float held = smoothstep(0.6, 1.0, closure);
+          vec2 lit = q - vec2(-0.25, 0.42);
+          skin.rgb *= 1.0 + held * (0.09 * clamp(q.y, -1.0, 1.0) - 0.17 * smoothstep(0.5, 1.2, length(q))
+              + 0.12 * exp(-dot(lit, lit) * 5.0));
           float opening = max(0.055, 1.0 - closure);
-          float curve = closure * 0.12 * (q.x * q.x - 0.4);
+          float curve = closure * 0.12 * (q.x * q.x - 0.4)
+              + sqrt(closure) * u_talk.w * 0.34 * q.x * (eyeIndex == 0 ? 1.0 : -1.0);
           vec2 openQ = vec2(q.x, (q.y - curve) / opening);
           float pull = max(0.0, 1.0 - dot(openQ, openQ) * 0.444);
-          vec2 sampleUV = eye.xy + openQ * eye.zw - u_gaze * eye.zw * 0.38 * pull * pull;
+          vec2 sampleUV = eye.xy + openQ * eye.zw / (1.0 + u_mood.x * 0.34 * pull * pull)
+              - u_gaze * eye.zw * 0.38 * pull * pull;
           float eyeMask = 1.0 - smoothstep(0.95, 1.07, length(openQ));
-          vec4 lid = mix(skin, texture2D(u_texture, sampleUV), eyeMask);
+          vec4 lid = mix(skin, pic(sampleUV), eyeMask);
           color = mix(color, lid, region * smoothstep(0.0, 0.15, closure));
+        }
+      }
+      if (u_mood.y > 0.001) {
+        // A smile: the cheek rises over the bottom of each eye in an arch. It is the picture's
+        // own skin from just under the eye, drawn up, so it matches whatever is there.
+        for (int eyeIndex = 0; eyeIndex < 2; eyeIndex++) {
+          vec4 eye = eyeIndex == 0 ? u_leftEye : u_rightEye;
+          vec2 q = (uv - eye.xy) / eye.zw;
+          float span = 1.0 - q.x * q.x;
+          if (span > 0.0 && q.y < 0.0 && q.y > -1.6) {
+            float line = -1.0 + 0.8 * u_mood.y * span;
+            float under = 1.0 - smoothstep(line - 0.04, line + 0.04, q.y);
+            if (under > 0.001) {
+              float from = -1.6 + (min(q.y, line) + 1.6) * 0.6 / (line + 1.6);
+              vec4 cheek = pic(eye.xy + vec2(q.x, from) * eye.zw);
+              cheek.rgb *= 1.0 - 0.12 * smoothstep(line - 0.25, line, q.y) * smoothstep(0.0, 0.3, u_mood.y * span);
+              color = mix(color, cheek, under * smoothstep(0.5, 0.95, cheek.a));
+            }
+          }
         }
       }
       if (u_gloss.z > 0.001) {
@@ -1547,7 +1800,7 @@
         for (int i = 0; i < 8; i++) {
           float angle = float(i) * 0.7854;
           vec2 dir = vec2(cos(angle), sin(angle));
-          float gap = 1.0 - texture2D(u_texture, uv + dir * 0.018).a;
+          float gap = 1.0 - pic(uv + dir * 0.018).a;
           outside += gap;
           away += dir * gap;
         }
@@ -1582,7 +1835,7 @@
         for (int i = 0; i < 8; i++) {
           float angle = float(i) * 0.7854;
           vec2 dir = vec2(cos(angle), sin(angle));
-          float gap = 1.0 - texture2D(u_texture, uv + dir * 0.02).a;
+          float gap = 1.0 - pic(uv + dir * 0.02).a;
           outside += gap;
           away += dir * gap;
         }
@@ -1611,7 +1864,10 @@
         rgb += vec3(0.9, 0.97, 1.0) * (exp(-dot(fd, fd) * 60.0) + flareRays) * bloom * a * 1.4 * clear;
         color.rgb = min(rgb, vec3(a));
       }
-      gl_FragColor = color * u_alpha;
+      // A layer draws nothing outside the part of the picture it holds.
+      vec2 within = (uv - u_rect.xy) / u_rect.zw;
+      float inPart = step(0.0, within.x) * step(within.x, 1.0) * step(0.0, within.y) * step(within.y, 1.0);
+      gl_FragColor = color * (u_alpha * inPart);
     }`;
   const MESH_VERTEX = `
     attribute vec2 a_pos;
@@ -1638,6 +1894,8 @@
       FINE_WEIGHT[f * 4 + k] = w[k];
     }
   }
+
+  const WHOLE_RECT = new Float32Array([0, 0, 1, 1]);
 
   class Renderer {
     constructor(canvas, antialias = true) {
@@ -1699,6 +1957,10 @@
       this.quadPos = gl.createBuffer();
       gl.bindBuffer(gl.ARRAY_BUFFER, this.quadPos);
       gl.bufferData(gl.ARRAY_BUFFER, 32, gl.DYNAMIC_DRAW);
+      // A limb's layer: a small grid of its own, sent whole each time it's drawn.
+      this.rigUV = gl.createBuffer();
+      this.rigPos = gl.createBuffer();
+      this.rigIndex = gl.createBuffer();
       gl.disable(gl.DEPTH_TEST);
       gl.enable(gl.BLEND);
       for (const entry of this.textures.values()) entry.texture = this.upload(entry.canvas);
@@ -1762,6 +2024,27 @@
       if (this.meshTime !== time) { gl.uniform1f(f.u.u_time, time); this.meshTime = time; }
       this.blend(false);
     }
+    // A limb's layer is drawn by the face's own program, from its own small buffers.
+    useRig(time) {
+      const gl = this.gl, f = this.faceProgram;
+      if (this.mode !== 'rig') {
+        gl.useProgram(f.p);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.rigUV);
+        gl.enableVertexAttribArray(f.uv);
+        gl.vertexAttribPointer(f.uv, 2, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.rigPos);
+        gl.enableVertexAttribArray(f.pos);
+        gl.vertexAttribPointer(f.pos, 2, gl.FLOAT, false, 0, 0);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.rigIndex);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.uniform1i(f.u.u_texture, 0);
+        gl.uniform2f(f.u.u_view, this.width, this.height);
+        this.mode = 'rig';
+        this.meshTime = null;
+      }
+      if (this.meshTime !== time) { gl.uniform1f(f.u.u_time, time); this.meshTime = time; }
+      this.blend(false);
+    }
     useSprites() {
       if (this.mode === 'sprite') return;
       const gl = this.gl, s = this.spriteProgram;
@@ -1784,8 +2067,10 @@
       this.additive = additive;
     }
     // A body, its warp grid at `dest` (0...1 over its body, y up), drawn `sw` x `sh` about its middle;
-    // `plain` draws just its picture, as the app's smear behind it is.
-    mesh(toy, dest, cx, cy, alpha, time, plain = false) {
+    // `plain` draws just its picture, as the app's smear behind it is. `layer` draws another
+    // picture laid over the same body: a rigged jelly's body without its limbs, or the paint
+    // under them ({ texture, rect }, the part of the picture it holds).
+    mesh(toy, dest, cx, cy, alpha, time, plain = false, layer = null) {
       const gl = this.gl, f = this.faceProgram, out = this.positions, sw = toy.body.bodyW * toy.body.overhang, sh = toy.body.bodyH;
       // Its warp grid, refined once a frame (its smear's ghosts are the same shape, drawn behind).
       const fine = toy.fineGrid || (toy.fineGrid = new Float32Array(FINE * FINE * 2));
@@ -1812,18 +2097,95 @@
       }
       this.useMeshes(time);
       gl.bufferSubData(gl.ARRAY_BUFFER, 0, out);
-      gl.bindTexture(gl.TEXTURE_2D, toy.art.texture);
-      const e = toy.eyes, b = toy.body;
+      gl.bindTexture(gl.TEXTURE_2D, layer ? layer.texture.texture : toy.art.texture);
+      this.faceUniforms(toy, plain, alpha, layer ? layer.rect : WHOLE_RECT);
+      gl.drawElements(gl.TRIANGLES, this.meshCount, gl.UNSIGNED_SHORT, 0);
+    }
+    // What the face's program needs for one draw of a toy: its eyes, how they and its mouth are
+    // held, its gloss, and the part of the picture the bound texture holds.
+    faceUniforms(toy, plain, alpha, rect) {
+      const gl = this.gl, f = this.faceProgram, e = toy.eyes, b = toy.body;
       gl.uniform4fv(f.u.u_leftEye, e.left);
       gl.uniform4fv(f.u.u_rightEye, e.right);
       gl.uniform4fv(f.u.u_skinSamples, e.skin);
-      const face = b.face && !plain;
-      gl.uniform1f(f.u.u_blink, face ? b.blink : 0);
+      const face = b.face && !plain, rig = face && toy.rig && toy.rig.shown ? toy.rig : null, held = rig ? rig.pose.face : null;
+      gl.uniform1f(f.u.u_blink, face ? Math.max(b.blink, held ? held.lidLow : 0) : 0);
       gl.uniform2f(f.u.u_gaze, face ? b.lookX : 0, face ? b.lookY : 0);
       gl.uniform3f(f.u.u_gloss, b.glossU, b.glossV, face ? b.glossK : 0);
       gl.uniform1f(f.u.u_flow, plain ? 0 : toy.flow);
       gl.uniform1f(f.u.u_alpha, alpha);
-      gl.drawElements(gl.TRIANGLES, this.meshCount, gl.UNSIGNED_SHORT, 0);
+      gl.uniform4fv(f.u.u_rect, rect);
+      if (rig) {
+        gl.uniform4fv(f.u.u_mouth, rig.mouth);
+        gl.uniform4f(f.u.u_talk, held.mouthOpen, held.mouthRound, held.mouthCurve, held.lidSlant);
+        gl.uniform2f(f.u.u_mood, held.eyesWide, held.smile);
+      } else {
+        gl.uniform4f(f.u.u_mouth, 0, 0, 0, 0);
+        gl.uniform4f(f.u.u_talk, 0, 0, 0, 0);
+        gl.uniform2f(f.u.u_mood, 0, 0);
+      }
+    }
+    // A rigged jelly, in layers (JellyScene.renderRig): the body's paint under its limbs, each
+    // limb turned at its joint and laid through the body's warp, then the body over them,
+    // its head tipped and rocked.
+    rigged(toy, dest, cx, cy, alpha, time) {
+      const gl = this.gl, rig = toy.rig, skin = rig.skin, pose = rig.pose, crop = skin.crop;
+      const sw = toy.body.bodyW * toy.body.overhang, sh = toy.body.bodyH, point = skin.point;
+      // A squash asked of the body itself: wider, and shorter, from its base.
+      let base = dest;
+      if (Math.abs(pose.squash) > 0.0005) {
+        base = rig.base;
+        const floor = (toy.body.minY - toy.body.drawY) / sh + 0.5, wide = 1 + 0.6 * pose.squash, tall = 1 - pose.squash;
+        for (let i = 0; i < GRID * 2; i += 2) { base[i] = 0.5 + (dest[i] - 0.5) * wide; base[i + 1] = floor + (dest[i + 1] - floor) * tall; }
+      }
+      // Where a place in the picture (0...1 across and up) is put by the soft body this frame,
+      // carrying on straight beyond the picture's edge.
+      const warped = (ux, uy) => {
+        const fx = ux * N, fy = uy * N, col = clamp(Math.floor(fx), 0, N - 1), row = clamp(Math.floor(fy), 0, N - 1);
+        const u = fx - col, v = fy - row, a = (row * COLS + col) * 2, c = a + COLS * 2;
+        const lx = base[a] + (base[a + 2] - base[a]) * u, ly = base[a + 1] + (base[a + 3] - base[a + 1]) * u;
+        const hx = base[c] + (base[c + 2] - base[c]) * u, hy = base[c + 1] + (base[c + 3] - base[c + 1]) * u;
+        point[0] = lx + (hx - lx) * v; point[1] = ly + (hy - ly) * v;
+      };
+      let body = base;
+      if (pose.head !== 0 || pose.rock !== 0) {
+        body = rig.dest;
+        for (let row = 0; row <= N; row++) {
+          for (let col = 0; col <= N; col++) {
+            const px = crop.x + (col / N) * crop.w, py = crop.y + (1 - row / N) * crop.h, i = (row * COLS + col) * 2;
+            settleRig(skin, px, py, py, pose, null, point);
+            warped((point[0] - crop.x) / crop.w, 1 - (point[1] - crop.y) / crop.h);
+            body[i] = point[0]; body[i + 1] = point[1];
+          }
+        }
+      }
+      if (rig.under) this.mesh(toy, body, cx, cy, alpha, time, false, rig.under);
+      skin.layers.forEach((layer, index) => {
+        const piece = rig.limbs[index], out = layer.out, rest = layer.rest, limb = layer.limb;
+        const [angle, rise] = limbTurn(layer, pose), up = -rise * crop.h, head = limb.onHead ? 1 : 0;
+        for (let i = 0; i < layer.count; i++) {
+          let x = rest[i * 2], y = rest[i * 2 + 1];
+          const restY = y, w = layer.turns[i];
+          if (w > 0 && (angle !== 0 || rise !== 0)) {
+            // Turned a share of the way, so the limb keeps its width round the bend.
+            const c = Math.cos(angle * w), s = Math.sin(angle * w), fx = x - limb.pivot[0], fy = y - limb.pivot[1];
+            x = c * fx - s * fy + limb.pivot[0]; y = s * fx + c * fy + limb.pivot[1] + w * up;
+          }
+          settleRig(skin, x, y, restY, pose, head, point);
+          warped((point[0] - crop.x) / crop.w, 1 - (point[1] - crop.y) / crop.h);
+          out[i * 2] = cx + (point[0] - 0.5) * sw; out[i * 2 + 1] = cy + (point[1] - 0.5) * sh;
+        }
+        this.useRig(time);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.rigUV);
+        gl.bufferData(gl.ARRAY_BUFFER, layer.uv, gl.DYNAMIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.rigPos);
+        gl.bufferData(gl.ARRAY_BUFFER, out, gl.DYNAMIC_DRAW);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, layer.index, gl.DYNAMIC_DRAW);
+        gl.bindTexture(gl.TEXTURE_2D, piece.texture.texture);
+        this.faceUniforms(toy, false, alpha, piece.rect);
+        gl.drawElements(gl.TRIANGLES, layer.index.length, gl.UNSIGNED_SHORT, 0);
+      });
+      this.mesh(toy, body, cx, cy, alpha, time, false, rig.body);
     }
     // A picture `w` x `h` about `x, y`, turned by `angle`, tinted, faded, maybe additive.
     sprite(texture, x, y, w, h, angle, r, g, b, alpha, additive) {
@@ -1871,7 +2233,9 @@
   }
 
   class Pile {
-    // `options`: hero, canvas, hint, jellies (S.jellies), faces, srcFor(id, finish, big), reduceMotion
+    // `options`: hero, canvas, hint, jellies (S.jellies), faces, srcFor(id, finish, big), reduceMotion;
+    // and, for jellies that move their limbs and mouths as in the app, rigs (window.SQUISH_RIGS)
+    // and rigSrcFor(id, big), the sheet of a jelly's layers.
     constructor(options) {
       Object.assign(this, options);
       this.toys = []; this.life = new Life();
@@ -1914,9 +2278,10 @@
       else { this.canvas.width = Math.round(this.W * this.ratio); this.canvas.height = Math.round(this.H * this.ratio); }
     }
 
-    // A mix of jellies and finishes, as a collection has, with a few the same.
+    // A mix of jellies and finishes, as a collection has, with a few the same. About half are
+    // Common: those are the ones with a skeleton, that move their arms and mouths.
     pick(n) {
-      const WEIGHTS = [['common', 34], ['rare', 14], ['sketch', 14], ['shiny', 20], ['diamond', 18]];
+      const WEIGHTS = [['common', 50], ['rare', 10], ['sketch', 10], ['shiny', 16], ['diamond', 14]];
       const ids = this.jellies.map(j => j.id).sort(() => Math.random() - 0.5), byId = Object.fromEntries(this.jellies.map(j => [j.id, j]));
       const kinds = [], seen = new Set();
       for (let i = 0; kinds.length < Math.min(n, 32) && i < 400; i++) {
@@ -1953,8 +2318,22 @@
         const key = `${id}/${finish}`;
         if (!loads.has(key)) loads.set(key, loadImage(this.srcFor(id, finish, big)).then(img => this.prepareArt(id, finish, img, commonSize)).catch(() => null));
       }
+      // A skeleton for each Common that has one: its layers come on a sheet of their own. A
+      // jelly whose sheet doesn't arrive is drawn as the one picture it is.
+      const rigged = this.gl && !this.reduceMotion && this.rigs && this.rigSrcFor ? this.rigs : null;
+      const sheets = new Map();
+      if (rigged) {
+        for (const [id, finish] of picks) {
+          const src = finish === 'common' && rigged[id] ? this.rigSrcFor(id, big) : null;
+          if (src && !sheets.has(id)) sheets.set(id, loadImage(src).catch(() => null));
+        }
+      }
       const arts = new Map();
       for (const [key, promise] of loads) arts.set(key, await promise);
+      for (const [id, promise] of sheets) {
+        const sheet = await promise, art = arts.get(`${id}/common`);
+        if (sheet && art && !art.rig) { try { art.rig = this.prepareRig(id, art, sheet); } catch (e) { art.rig = null; } }
+      }
       const toys = [];
       picks.forEach(([id, finish], index) => {
         const art = arts.get(`${id}/${finish}`);
@@ -1967,6 +2346,9 @@
           flow: this.reduceMotion ? 0 : finish === 'shiny' ? 1 : finish === 'diamond' ? 2 : 0,
           eyes: art.eyes, aspect: art.aspect, solid: art.solid,
           spawned: false, resting: false, calmTime: 0, quietTime: 0, slowTime: 0, huddleLeft: HUDDLE_TIME, glints: [], glintClock: Math.random(),
+          // Its skeleton: the layers its kind shares, and its own pose and what makes it.
+          rig: art.rig && face ? { ...art.rig, actor: new RigActor(), pose: REST_POSE(), shown: true,
+            base: new Float64Array(GRID * 2), dest: new Float64Array(GRID * 2) } : null,
         };
         const height = commonSize / Math.sqrt(Math.max(toy.aspect, 0.1));
         toy.height = height;
@@ -2010,7 +2392,67 @@
         ? { left: new Float32Array(eye(f[0], f[1], f[2], f[3])), right: new Float32Array(eye(f[4], f[5], f[6], f[7])),
             skin: new Float32Array([...eye(f[8], f[9], 0, 0).slice(0, 2), ...eye(f[10], f[11], 0, 0).slice(0, 2)]) }
         : { left: new Float32Array(HIDDEN_EYE), right: new Float32Array(HIDDEN_EYE), skin: new Float32Array(4) };
-      return { texture: entry, aura, eyes, aspect: sil.aspect, solid: sil.solid };
+      return { texture: entry, aura, eyes, aspect: sil.aspect, solid: sil.solid, crop: cut.crop, side, rig: null };
+    }
+    // A jelly's layers, cut from its sheet: the body without its limbs over the same part of the
+    // picture as the whole (so it takes the same warp and the same face), each limb and the
+    // body's paint under them a small texture of just its own part.
+    prepareRig(id, art, sheet) {
+      const rig = this.rigs[id], [cx, cy, cw, ch] = art.crop, side = art.side;
+      // The shown part of the picture in its 768 pixels, y down, as the skeleton is marked.
+      const crop = { x: cx * 768, y: (1 - cy - ch) * 768, w: cw * 768, h: ch * 768 };
+      const k = sheet.naturalWidth / rig.sheet[0];
+      const piece = (name, whole) => {
+        const [sx, sy, w, h, px, py] = rig.pieces[name];
+        const texture = this.gl.texture(`${id}/rig/${name}/${side}`, () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = whole ? side : clamp(nextPow2((w / crop.w) * side), 16, 512);
+          canvas.height = whole ? side : clamp(nextPow2((h / crop.h) * side), 16, 512);
+          const ctx = canvas.getContext('2d');
+          ctx.imageSmoothingQuality = 'high';
+          if (whole) ctx.drawImage(sheet, sx * k, sy * k, w * k, h * k, ((px - crop.x) / crop.w) * side, ((py - crop.y) / crop.h) * side, (w / crop.w) * side, (h / crop.h) * side);
+          else ctx.drawImage(sheet, sx * k, sy * k, w * k, h * k, 0, 0, canvas.width, canvas.height);
+          return canvas;
+        });
+        // The part of the shown picture it holds: its corner (y up), then its size.
+        const rect = whole ? WHOLE_RECT : new Float32Array([(px - crop.x) / crop.w, 1 - (py + h - crop.y) / crop.h, w / crop.w, h / crop.h]);
+        return { texture, rect };
+      };
+      const m = rig.mouth, talks = m[2] > 0 && m[3] > 0;
+      const body = piece('body', true);
+      // A sheet the browser couldn't draw leaves the body empty: then the jelly stays one picture.
+      const probe = document.createElement('canvas');
+      probe.width = probe.height = 16;
+      const check = probe.getContext('2d', { willReadFrequently: true });
+      check.drawImage(body.texture.canvas, 0, 0, 16, 16);
+      const seen = check.getImageData(0, 0, 16, 16).data;
+      let solid = 0;
+      for (let i = 3; i < seen.length; i += 4) if (seen[i] > 40) solid++;
+      if (solid < 12) throw new Error('empty rig sheet');
+      return {
+        skin: makeRigSkin(rig, crop), body, limbs: rig.limbs.map(limb => piece(limb.part, false)),
+        under: rig.pieces.under ? piece('under', false) : null, talks,
+        // Its mouth, in its texture, as its eyes are.
+        mouth: new Float32Array(talks ? [(m[0] / 768 - cx) / cw, (1 - m[1] / 768 - cy) / ch, m[2] / 768 / cw, m[3] / 768 / ch] : [0, 0, 0, 0]),
+      };
+    }
+    // A habit starting: a jelly with a skeleton puts its arms and mouth into it, as in the app
+    // (a stretch with a yawn, a cheer as it bounces, munching as it looks about; one whose mouth
+    // can't be seen stretches where another would munch).
+    rigHabit(toy, habit) {
+      if (!toy.rig) return;
+      const gesture = { stretch: 'stretch', bounce: 'cheer', lookAround: 'chew' }[habit];
+      if (gesture) toy.rig.actor.play(gesture === 'chew' && !toy.rig.talks ? 'stretch' : gesture);
+    }
+    // Each skeleton's pose for this frame: arms up in the air, whatever move it is making.
+    stepRigs(live, frame) {
+      for (const toy of live) {
+        const rig = toy.rig;
+        if (!rig) continue;
+        const b = toy.body, held = !!b.grab;
+        const flight = held || !(b.onFloor || b.supported) ? [b.rvx / b.bodyH, b.rvy / b.bodyH] : null;
+        fitPose(Object.assign(rig.pose, rig.actor.step(frame, flight, held)));
+      }
     }
 
     // Each toy's place in the room once it drops in: from a few lanes across the middle,
@@ -2058,6 +2500,7 @@
       const settled = live.length === this.toys.length && this.elapsed > this.lastSpawn + 2.5;
       const landed = this.life.update(frame, live, { finger: this.finger, held: this.held, settled, squeeze: this.squeezeAmount }, this);
       this.celebrate(landed);
+      this.stepRigs(live, frame);
       for (const toy of live) toy.body.beginFrame(frame);
       // Toys rest one by one; whatever moves a resting one wakes just that one.
       for (const toy of live) {
@@ -2283,7 +2726,8 @@
             }
           }
         }
-        items.push([z, () => (still ? gl.mesh(toy, STILL_GRID, b.cx, b.cy, 1, t) : gl.mesh(toy, b.dest, b.drawX, b.drawY, 1, t))]);
+        items.push([z, () => (still ? gl.mesh(toy, STILL_GRID, b.cx, b.cy, 1, t)
+          : toy.rig ? gl.rigged(toy, b.dest, b.drawX, b.drawY, 1, t) : gl.mesh(toy, b.dest, b.drawX, b.drawY, 1, t))]);
         if (toy.glints.length) items.push([z + 5, () => this.drawGlints(toy)]);
       }
       items.sort((a, b) => a[0] - b[0]);
@@ -2635,13 +3079,14 @@
   // ---------------------------------------------------------------------------------------
   // On the page.
   // `holdUntil`: a promise the pour waits for once built (the site's opening, playing over it).
-  function start({ hero, pit, hint, jellies, faces, srcFor, reduceMotion, holdUntil }) {
+  function start({ hero, pit, hint, jellies, faces, srcFor, reduceMotion, holdUntil, rigs, rigSrcFor }) {
     const canvas = document.createElement('canvas');
     canvas.className = 'pit-canvas';
     canvas.setAttribute('aria-hidden', 'true');
     pit.appendChild(canvas);
     // Beside the headline only on a wide screen on its side (site.css's hero layout).
-    const pile = new Pile({ hero, canvas, hint, jellies, faces, srcFor, reduceMotion, wide: matchMedia('(min-width: 900px) and (orientation: landscape)') });
+    const pile = new Pile({ hero, canvas, hint, jellies, faces, srcFor, reduceMotion, rigs, rigSrcFor,
+      wide: matchMedia('(min-width: 900px) and (orientation: landscape)') });
     window.squishPit = pile;                            // handy for checking the frame budget in the console
     let started = false, ready = false, running = false, visible = false, last = 0, held = !!holdUntil;
     if (holdUntil) holdUntil.then(() => { held = false; wake(); });

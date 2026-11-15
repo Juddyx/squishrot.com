@@ -234,6 +234,9 @@
     window.SquishPit.start({
       hero, pit, hint: $('.hero-hint'), jellies: S.jellies, faces: S.faces || {}, reduceMotion, holdUntil,
       srcFor: (id, finish, big) => jellySrc(id, finish, big ? 'full' : 'sm'),
+      // The app's skeletons (rigs.js): each Common jelly's layers come on a sheet of their own.
+      rigs: window.SQUISH_RIGS || null,
+      rigSrcFor: (id, big) => (useAvif ? `assets/img/jellies/${id}-rig${big ? '' : '-sm'}.avif` : null),
     });
   }
 
