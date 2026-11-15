@@ -424,15 +424,19 @@
   // fingertip shows every tap and hold at the moment the recording has it: points on the
   // 402 x 874 screen, seconds into the clip, and how long a hold lasts.
   const TOUCHES = {
-    map: [{ t: 2.12, x: 247, y: 333 }, { t: 4.45, x: 201, y: 780 }, { t: 7.95, x: 201, y: 440, hold: 1.8 }],
-    den: [{ t: 7.6, x: 201, y: 312 }],
-    trade: [{ t: 2.95, x: 295, y: 603 }, { t: 5.8, x: 253, y: 801 }, { t: 9.05, x: 106, y: 669 }],
+    map: [{ t: 3.4, x: 232, y: 364 }, { t: 7.23, x: 201, y: 778 }, { t: 10.03, x: 201, y: 437, hold: 2 }],
+    den: [{ t: 5.47, x: 201, y: 312 }],
+    trade: [{ t: 3.13, x: 296, y: 624 }, { t: 7.41, x: 253, y: 801 }, { t: 12.36, x: 106, y: 670 }, { t: 15.69, x: 296, y: 670 }],
     blender: [
-      { t: 0.9, x: 51, y: 671, hold: 0.06 }, { t: 1.1, x: 126, y: 671, hold: 0.06 }, { t: 1.35, x: 201, y: 671 },
-      { t: 3.8, x: 199, y: 533 }, { t: 11.35, x: 201, y: 440, hold: 1.75 }, { t: 15.55, x: 201, y: 803 },
+      { t: 2.43, x: 51, y: 671 }, { t: 4.51, x: 126, y: 671 }, { t: 6.62, x: 201, y: 671 },
+      { t: 10.33, x: 201, y: 533 }, { t: 17.21, x: 201, y: 437, hold: 2 },
     ],
+    pro: [{ t: 1.4, x: 201, y: 380, hold: 1.45 }],
   };
-  const LABELS = { map: 'opening a drop', den: 'the Den', trade: 'making an offer', blender: 'the Blender' };
+  const LABELS = {
+    map: 'opening a drop', den: 'the Den', trade: 'making an offer', blender: 'the Blender',
+    leaderboard: 'the leaderboard', pro: 'Squishrot Pro',
+  };
 
   // Where the fingertip is at time t: gliding in to a touch (from the last one if they come
   // close together, else from below), pressed for it, then fading where it lifted.
@@ -545,7 +549,7 @@
 
   /* ---------------- every jelly ---------------- */
   const GLOW = {
-    common: 'rgba(153, 204, 255, .3)', rare: 'rgba(255, 140, 26, .32)', sketch: 'rgba(255, 255, 255, .2)',
+    common: 'rgba(153, 204, 255, .3)', rare: 'rgba(255, 140, 26, .32)', epic: 'rgba(184, 71, 255, .36)', sketch: 'rgba(255, 255, 255, .2)',
     shiny: 'rgba(255, 92, 184, .36)', diamond: 'rgba(173, 237, 255, .4)',
   };
 
@@ -606,7 +610,7 @@
       show(j.id, j.finishes[(i + 1) % j.finishes.length]);
     });
 
-    const cycle = ['diamond', 'shiny', 'common', 'sketch', 'rare'];
+    const cycle = ['diamond', 'shiny', 'epic', 'common', 'sketch', 'rare'];
     const list = S.jellies.map((j, i) => [j.id, finishFor(j.id, cycle[i % cycle.length])]);
     const rows = $$('.marquee-row');
     const halves = [list.slice(0, Math.ceil(list.length / 2)), list.slice(Math.ceil(list.length / 2))];

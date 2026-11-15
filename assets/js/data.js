@@ -153,6 +153,7 @@ window.SQUISH = {
    "finishes": [
     "common",
     "rare",
+    "epic",
     "sketch",
     "shiny",
     "diamond"
@@ -165,6 +166,7 @@ window.SQUISH = {
    "finishes": [
     "common",
     "rare",
+    "epic",
     "sketch",
     "shiny",
     "diamond"
@@ -177,6 +179,7 @@ window.SQUISH = {
    "finishes": [
     "common",
     "rare",
+    "epic",
     "sketch",
     "shiny",
     "diamond"
@@ -189,6 +192,7 @@ window.SQUISH = {
    "finishes": [
     "common",
     "rare",
+    "epic",
     "sketch",
     "shiny",
     "diamond"
@@ -201,6 +205,7 @@ window.SQUISH = {
    "finishes": [
     "common",
     "rare",
+    "epic",
     "sketch",
     "shiny",
     "diamond"
@@ -213,6 +218,7 @@ window.SQUISH = {
    "finishes": [
     "common",
     "rare",
+    "epic",
     "sketch",
     "shiny",
     "diamond"
@@ -225,6 +231,7 @@ window.SQUISH = {
    "finishes": [
     "common",
     "rare",
+    "epic",
     "sketch",
     "shiny",
     "diamond"
@@ -237,6 +244,7 @@ window.SQUISH = {
    "finishes": [
     "common",
     "rare",
+    "epic",
     "sketch",
     "shiny",
     "diamond"
@@ -249,6 +257,7 @@ window.SQUISH = {
    "finishes": [
     "common",
     "rare",
+    "epic",
     "sketch",
     "shiny",
     "diamond"
@@ -261,6 +270,7 @@ window.SQUISH = {
    "finishes": [
     "common",
     "rare",
+    "epic",
     "sketch",
     "shiny",
     "diamond"
@@ -273,6 +283,7 @@ window.SQUISH = {
    "finishes": [
     "common",
     "rare",
+    "epic",
     "sketch",
     "shiny",
     "diamond"
@@ -285,6 +296,7 @@ window.SQUISH = {
    "finishes": [
     "common",
     "rare",
+    "epic",
     "sketch",
     "diamond"
    ]
@@ -296,6 +308,7 @@ window.SQUISH = {
    "finishes": [
     "common",
     "rare",
+    "epic",
     "sketch",
     "shiny",
     "diamond"
@@ -308,6 +321,7 @@ window.SQUISH = {
    "finishes": [
     "common",
     "rare",
+    "epic",
     "sketch",
     "shiny",
     "diamond"

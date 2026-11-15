@@ -1916,7 +1916,7 @@
 
     // A mix of jellies and finishes, as a collection has, with a few the same.
     pick(n) {
-      const WEIGHTS = [['common', 34], ['rare', 14], ['sketch', 14], ['shiny', 20], ['diamond', 18]];
+      const WEIGHTS = [['common', 30], ['rare', 12], ['epic', 12], ['sketch', 12], ['shiny', 18], ['diamond', 16]];
       const ids = this.jellies.map(j => j.id).sort(() => Math.random() - 0.5), byId = Object.fromEntries(this.jellies.map(j => [j.id, j]));
       const kinds = [], seen = new Set();
       for (let i = 0; kinds.length < Math.min(n, 32) && i < 400; i++) {
