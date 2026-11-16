@@ -424,14 +424,15 @@
   // fingertip shows every tap and hold at the moment the recording has it: points on the
   // 402 x 874 screen, seconds into the clip, and how long a hold lasts.
   const TOUCHES = {
-    map: [{ t: 3.4, x: 232, y: 364 }, { t: 7.23, x: 201, y: 778 }, { t: 10.03, x: 201, y: 437, hold: 2 }],
-    den: [{ t: 5.47, x: 201, y: 312 }],
-    trade: [{ t: 3.13, x: 296, y: 624 }, { t: 7.41, x: 253, y: 801 }, { t: 12.36, x: 106, y: 670 }, { t: 15.69, x: 296, y: 670 }],
+    map: [{ t: 2.15, x: 148, y: 453 }, { t: 6.2, x: 201, y: 778 }, { t: 9.2, x: 201, y: 437, hold: 2 }],
+    den: [{ t: 4.52, x: 201, y: 312 }],
+    trade: [{ t: 2.17, x: 296, y: 588 }, { t: 6.0, x: 253, y: 801 }, { t: 10.62, x: 106, y: 634 }, { t: 13.67, x: 296, y: 634 }],
     blender: [
-      { t: 2.43, x: 51, y: 671 }, { t: 4.51, x: 126, y: 671 }, { t: 6.62, x: 201, y: 671 },
-      { t: 10.33, x: 201, y: 533 }, { t: 17.21, x: 201, y: 437, hold: 2 },
+      { t: 1.9, x: 51, y: 677 }, { t: 3.77, x: 126, y: 677 }, { t: 5.85, x: 201, y: 677 },
+      { t: 9.49, x: 201, y: 533 }, { t: 16.5, x: 201, y: 437, hold: 2 },
     ],
-    pro: [{ t: 1.4, x: 201, y: 380, hold: 1.45 }],
+    leaderboard: [{ t: 6.06, x: 201, y: 700 }],
+    pro: [{ t: 1.45, x: 201, y: 380, hold: 1.45 }],
   };
   const LABELS = {
     map: 'opening a drop', den: 'the Den', trade: 'making an offer', blender: 'the Blender',
