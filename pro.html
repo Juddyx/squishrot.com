@@ -25,6 +25,61 @@
   <div class="backdrop-light"></div>
 </div>
 
+<!-- ============ PRO OPENING: as the app's Get Pro opens (ProPopScene) ============ -->
+<!-- Plays the first time the page opens in a visit: not on back/forward, not when a link
+     jumps to a section, and not again once seen this visit ("Pop the Pro ball again" replays it).
+     assets/js/pro-intro.js runs it; if that never loads, the page shows anyway. -->
+<script>
+  (function () {
+    try {
+      var nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+      var seen = false;
+      try { seen = sessionStorage.getItem('squishrot.proIntro') === '1'; } catch (e) {}
+      if (!(nav && nav.type === 'back_forward') && !location.hash && !seen) document.documentElement.classList.add('pro-intro-on');
+    } catch (e) {}
+    setTimeout(function () {
+      if (window.proIntroReady) return;
+      document.documentElement.classList.remove('pro-intro-on');
+      var r = document.getElementById('pro-intro'); if (r) r.hidden = true;
+    }, 5000);
+  })();
+</script>
+<div class="pro-intro" id="pro-intro" role="dialog" aria-modal="true" aria-labelledby="pi-title" data-stage="">
+  <div class="pi-aurora" aria-hidden="true"></div>
+  <button class="pi-skip" type="button" aria-label="Skip the intro"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+  <div class="pi-stage">
+    <section class="pi-scene pi-scene--ball">
+      <h2 class="pi-title" id="pi-title">Something <em>special</em> is inside</h2>
+      <div class="pi-ball-wrap">
+        <svg class="pi-ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="pi-ring-track" cx="50" cy="50" r="47"/><circle class="pi-ring-track pi-ring-track--outer" cx="50" cy="50" r="49.4"/><circle class="pi-ring-fill" cx="50" cy="50" r="47"/></svg>
+        <button class="pi-ball-button" type="button" aria-label="Pro jelly: press and hold to pop it (or hold Space)">
+          <span class="pi-ball"><span class="pi-swirl"></span><span class="pi-dots"></span><span class="pi-gloss"></span><span class="pro-chip"><b>PRO</b></span></span>
+        </button>
+        <i class="pi-moon pi-moon--1" aria-hidden="true"></i><i class="pi-moon pi-moon--2" aria-hidden="true"></i><i class="pi-moon pi-moon--3" aria-hidden="true"></i>
+        <i class="pi-shadow" aria-hidden="true"></i>
+        <div class="pi-burst" aria-hidden="true"></div>
+      </div>
+      <p class="pi-hint"><em>Hold</em> to pop it</p>
+    </section>
+    <div class="pi-flash" aria-hidden="true"><span class="pro-chip pi-stamp"><b>PRO</b></span><i class="pi-wave-ring"></i><i class="pi-wave-ring"></i><i class="pi-wave-ring"></i></div>
+    <svg class="pi-flood" viewBox="0 0 400 300" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="pi-jelly" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22d3ee"/><stop offset=".5" stop-color="#6366f1"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs><path d="M0 300V96C58 30 112 196 196 104S334 22 400 112V300Z" fill="url(#pi-jelly)"/><path d="M0 104C58 38 112 204 196 112S334 30 400 120" fill="none" stroke="rgba(255,255,255,.45)" stroke-width="5"/></svg>
+    <section class="pi-scene pi-scene--perks">
+      <div class="pi-crest"><i class="pi-crest-glow" aria-hidden="true"></i><span class="pro-chip pi-mark"><b>PRO</b></span><img class="pi-logo" src="assets/img/logo.png" alt="Squishrot" width="171" height="57"></div>
+      <ul class="pi-perks" aria-label="What Pro adds">
+        <li style="--i:0"><i class="perk-ico perk-ico--trade pi-perk pi-perk--trade" aria-hidden="true"></i><span>Unlimited Trading</span></li>
+        <li style="--i:1"><i class="perk-ico perk-ico--den pi-perk pi-perk--den" aria-hidden="true"></i><span>Bigger Den &amp; Reach</span></li>
+        <li style="--i:2"><i class="perk-ico perk-ico--drop pi-perk pi-perk--drop" aria-hidden="true"></i><span>Daily Pro Drop</span></li>
+        <li style="--i:3"><i class="perk-ico perk-ico--freeze pi-perk pi-perk--freeze" aria-hidden="true"></i><span>Streak Freeze &amp; Rescue</span></li>
+        <li style="--i:4"><i class="perk-ico perk-ico--crown pi-perk pi-perk--crown" aria-hidden="true"></i><span>Pro Profile</span></li>
+        <li style="--i:5"><i class="perk-ico perk-ico--gift pi-perk pi-perk--gift" aria-hidden="true"></i><span>Jelly of the Month</span></li>
+      </ul>
+      <p class="pi-unlock">Unlock <em>Squishrot Pro</em></p>
+      <button class="pi-go" type="button">Let’s go</button>
+    </section>
+  </div>
+</div>
+<script src="assets/js/pro-intro.js" defer></script>
+
 <a class="skip" href="#main">Skip to content</a>
 
 <header class="nav" id="nav">
@@ -60,6 +115,7 @@
         <a class="get-pro" href="#get" aria-label="Get Pro: download Squishrot and get Pro from your profile"><span>Get</span><span class="pro-chip"><b>PRO</b></span></a>
         <a class="store-badge" href="#get" data-store><svg viewBox="0 0 384 512" aria-hidden="true"><path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg><span><small data-store-top>Coming soon to the</small><b>App Store</b></span></a>
         <a class="ghost-link" href="#compare">Compare free and Pro <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3.5 8.5 8 13l4.5-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+        <button class="ghost-link pi-replay" type="button" data-pro-intro>Pop the Pro ball again <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 8a5 5 0 1 1-1.5-3.6M13 2.5v3h-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
       </div>
     </div>
     <div class="phone-slot reveal">
