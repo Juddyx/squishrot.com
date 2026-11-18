@@ -4,6 +4,9 @@
   <!-- The App Store link, as on index.html: paste it in both pages once Squishrot is live. -->
   <meta name="app-store-url" content="">
   <link rel="preload" href="assets/fonts/plus-jakarta-sans-800.woff" as="font" type="font/woff" crossorigin>
+  <!-- The live board: the server address and its publishable key. Empty hides the live board. -->
+  <meta name="leaderboard-api" content="">
+  <meta name="leaderboard-key" content="">
   <link rel="stylesheet" href="assets/css/site.css">
   <script>
     /* AVIF check: jelly art is AVIF, with PNG for the few browsers without it. */
@@ -68,6 +71,20 @@
         </div>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- ============ LIVE BOARD ============ -->
+<!-- Filled from the server (public.leaderboard_top) by the script at the end of the page; hidden
+     until the leaderboard-api meta has an address, and whenever it can't be reached. -->
+<section class="sec live" id="live" aria-labelledby="live-title" hidden>
+  <div class="wrap center">
+    <p class="eyebrow eyebrow--gold reveal"><span class="live-dot" aria-hidden="true"></span> Live</p>
+    <h2 class="split" id="live-title">Top collectors right now</h2>
+    <p class="live-meta reveal" aria-live="polite"><span id="live-players"></span><span id="live-updated"></span></p>
+  </div>
+  <div class="wrap live-wrap reveal">
+    <ol class="live-board" id="live-board" aria-label="The top collectors on the leaderboard"></ol>
   </div>
 </section>
 
@@ -189,6 +206,116 @@
       };
       ins.forEach(function (i) { i.addEventListener('input', draw); });
       draw();
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+  })();
+  /* The live board: the top ten from the server (public.leaderboard_top), refreshed every minute
+     while the page is in view. Rows slide to their new places and scores roll to their new values.
+     The leaderboard-api meta names the server (or a .json file, for testing); empty hides it. */
+  (function () {
+    var meta = function (n) { var m = document.querySelector('meta[name="' + n + '"]'); return m ? m.content.trim() : ''; };
+    var api = meta('leaderboard-api'), key = meta('leaderboard-key');
+    var LABEL = { retro: 'Common', rare: 'Rare', holo: 'Epic', sketch: 'Sketch', shiny: 'Shiny', crystal: 'Diamond' };
+    var FINISH = { retro: 'common', rare: 'rare', holo: 'epic', sketch: 'sketch', shiny: 'shiny', crystal: 'diamond' };
+    var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var fmt = function (n) { return Math.round(n).toLocaleString('en-US'); };
+    var esc = function (t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return '&#' + c.charCodeAt(0) + ';'; }); };
+    var section, board, updated, players, lastAt = 0, timer, shown = {};
+    function ago() {
+      if (!lastAt) return;
+      var s = Math.round((Date.now() - lastAt) / 1000);
+      updated.textContent = s < 10 ? 'Updated just now' : s < 60 ? 'Updated ' + s + ' s ago' : 'Updated ' + Math.round(s / 60) + ' min ago';
+    }
+    function roll(el, from, to) {
+      if (reduce || from === to) { el.textContent = fmt(to); return; }
+      var start = performance.now(), d = 900;
+      el.classList.add('is-rolling');
+      (function step(now) {
+        var k = Math.min(1, (now - start) / d), e = 1 - Math.pow(1 - k, 3);
+        el.textContent = fmt(from + (to - from) * e);
+        if (k < 1) requestAnimationFrame(step); else el.classList.remove('is-rolling');
+      })(start);
+    }
+    function avatar(row) {
+      var id = row.avatarCharacterID;
+      var has = id && window.SQUISH && window.SQUISH.jellies.some(function (j) { return j.id === id; });
+      if (has) {
+        var avif = !document.documentElement.classList.contains('no-avif');
+        return '<img class="live-avatar" src="assets/img/jellies/' + id + '-common-sm.' + (avif ? 'avif' : 'png') + '" alt="" width="48" height="48" loading="lazy">';
+      }
+      return '<span class="live-avatar live-avatar--letter" aria-hidden="true">' + esc((row.displayName || '?').trim().charAt(0).toUpperCase()) + '</span>';
+    }
+    function move(row) {
+      if (row.previousRank == null) return '<span class="live-move live-move--new">New</span>';
+      var d = row.previousRank - row.rank;
+      if (d > 0) return '<span class="live-move live-move--up" aria-label="Up ' + d + ' since yesterday">▲ ' + d + '</span>';
+      if (d < 0) return '<span class="live-move live-move--down" aria-label="Down ' + (-d) + ' since yesterday">▼ ' + (-d) + '</span>';
+      return '<span class="live-move" aria-label="Same place as yesterday">–</span>';
+    }
+    function draw(data) {
+      var rows = (data && data.top) || [];
+      if (!rows.length) { section.hidden = true; return; }
+      var first = section.hidden;
+      section.hidden = false;
+      if (first) section.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('in'); });
+      players.textContent = fmt(data.players) + (data.players === 1 ? ' collector' : ' collectors');
+      // Where each row is now, for the slide to its new place.
+      var before = {};
+      board.querySelectorAll('li[data-key]').forEach(function (li) { before[li.dataset.key] = li.getBoundingClientRect().top; });
+      var next = {};
+      board.innerHTML = rows.map(function (row) {
+        var key = (row.displayName || '') + '|' + (row.avatarCharacterID || '');
+        next[key] = row.score;
+        var finish = FINISH[row.bestRarity];
+        return '<li data-key="' + esc(key) + '" class="live-row' + (row.rank <= 3 ? ' live-row--top live-row--' + row.rank : '') + '">' +
+          '<span class="live-rank">' + row.rank + '</span>' + avatar(row) +
+          '<span class="live-name"><b>' + esc(row.displayName) + '</b>' + (row.isPro ? '<span class="pro-chip">PRO</span>' : '') +
+          (finish ? '<span class="chip chip--' + finish + '">' + LABEL[row.bestRarity] + '</span>' : '') + '</span>' +
+          move(row) + '<span class="live-score">' + fmt(shown[key] != null ? shown[key] : row.score) + '</span></li>';
+      }).join('');
+      var had = Object.keys(shown).length > 0;
+      board.querySelectorAll('li[data-key]').forEach(function (li) {
+        var key = li.dataset.key, score = li.querySelector('.live-score');
+        if (shown[key] != null && shown[key] !== next[key]) roll(score, shown[key], next[key]);
+        if (reduce) return;
+        if (before[key] != null) {
+          var dy = before[key] - li.getBoundingClientRect().top;
+          if (Math.abs(dy) > 1) li.animate([{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }],
+            { duration: 600, easing: 'cubic-bezier(.22, 1, .36, 1)' });
+        } else if (had) {
+          li.animate([{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'none' }], { duration: 400, easing: 'ease-out' });
+        }
+      });
+      shown = next;
+      lastAt = Date.now();
+      ago();
+    }
+    function load() {
+      var request = /\.json(\?|$)/.test(api)
+        ? fetch(api, { cache: 'no-store' })
+        : fetch(api.replace(/\/+$/, '') + '/rest/v1/rpc/leaderboard_top', {
+            method: 'POST', headers: { 'Content-Type': 'application/json', apikey: key }, body: JSON.stringify({ p_limit: 10 }) });
+      return request.then(function (r) { if (!r.ok) throw new Error(String(r.status)); return r.json(); })
+        .then(draw)
+        .catch(function () { if (!lastAt) section.hidden = true; });
+    }
+    function schedule() {
+      clearInterval(timer);
+      if (document.visibilityState === 'visible') timer = setInterval(load, 60000);
+    }
+    function start() {
+      section = document.getElementById('live');
+      if (!section || !api) return;
+      board = document.getElementById('live-board');
+      updated = document.getElementById('live-updated');
+      players = document.getElementById('live-players');
+      load();
+      schedule();
+      setInterval(ago, 5000);
+      document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible' && Date.now() - lastAt > 30000) load();
+        schedule();
+      });
     }
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
   })();
