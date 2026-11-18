@@ -4,9 +4,10 @@
   <!-- The App Store link, as on index.html: paste it in both pages once Squishrot is live. -->
   <meta name="app-store-url" content="">
   <link rel="preload" href="assets/fonts/plus-jakarta-sans-800.woff" as="font" type="font/woff" crossorigin>
-  <!-- The live board: the server address and its publishable key. Empty hides the live board. -->
-  <meta name="leaderboard-api" content="">
-  <meta name="leaderboard-key" content="">
+  <!-- The live board: the server address and its publishable key (browser-safe, as the app ships it).
+       Empty hides the live board. Swap both for production's when it exists. -->
+  <meta name="leaderboard-api" content="https://dkbrcrkqqqihgcjiqjmo.supabase.co">
+  <meta name="leaderboard-key" content="sb_publishable_Oll1JxTXJmN6VxRWupCUIw_Ya3fM6ut">
   <link rel="stylesheet" href="assets/css/site.css">
   <script>
     /* AVIF check: jelly art is AVIF, with PNG for the few browsers without it. */
