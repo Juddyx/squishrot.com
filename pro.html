@@ -1,0 +1,174 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Squishrot Pro</title>
+  <meta name="description" content="Squishrot Pro: open drops from 150 m, a Rare-or-better drop every day, four more Den spots, unlimited trading, streak freezes and a Shiny jelly every month. $4.99 a month.">
+  <!-- The App Store link, as on index.html: paste it in both pages once Squishrot is live. -->
+  <meta name="app-store-url" content="">
+  <link rel="preload" href="assets/fonts/plus-jakarta-sans-800.woff" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script>
+    /* AVIF check: jelly art is AVIF, with PNG for the few browsers without it. */
+    window.avifReady = new Promise(function (done) {
+      var probe = new Image();
+      probe.onload = function () { done(true); };
+      probe.onerror = function () { document.documentElement.classList.add('no-avif'); done(false); };
+      probe.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAE1pUHJhdmlmbWlhZm1pZjEAAAHobWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAAOcGl0bQAAAAAAAQAAAE1paW5mAAAAAAADAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAFWluZmUCAAABAAIAAGF2MDEAAAAAFWluZmUCAAABAAMAAEV4aWYAAAAAKGlyZWYAAAAAAAAADmF1eGwAAgABAAEAAAAOY2RzYwADAAEAAQAAANppcHJwAAAAsWlwY28AAAATY29scm5jbHgAAgACAAaAAAAADGNsbGkAywBAAAAAFGlzcGUAAAAAAAAAAgAAAAIAAAAJaXJvdAAAAAAQcGl4aQAAAAADCAgIAAAADnBpeGkAAAAAAQgAAAA3YXV4QwAAAAB1cm46bXBlZzpoZXZjOjIwMTU6YXV4aWQ6MQAAAAAMAAAACE4BpQQAAf5AAAAADGF2MUOBAAwAAAAADGF2MUOBABwAAAAAIWlwbWEAAAAAAAAAAgABBoECAwWIhAACBQMGh4mEAAAAOmlsb2MAAAAARAAAAwABAAAAAQAAAmYAAAApAAIAAAABAAACjwAAAB0AAwAAAAEAAAIYAAAATgAAAAFtZGF0AAAAAAAAAKQAAAAGRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAAqADAAQAAAABAAAAAgAAAAASAAoMAAAAAAZ//AgQEDQgMhcQAZIACCCCIADb235ba5xLJkSGy4OYkRIACggAAAAABn/8FTIPEAGOACCIArFiH7QUuqOu';
+    });
+    document.documentElement.classList.add('js'); document.documentElement.lang = 'en';
+    /* If the site script never runs, show everything rather than leave it hidden. */
+    setTimeout(function () { if (!window.siteReady) document.documentElement.classList.remove('js'); }, 4000);
+  </script>
+  <script src="assets/js/data.js" defer></script>
+  <script src="assets/js/site.js" defer></script>
+<!-- ============ BACKDROP: the app's page backdrop, as on the home page ============ -->
+<div class="backdrop" aria-hidden="true">
+  <picture><source media="(min-aspect-ratio: 1/1)" type="image/avif" srcset="assets/img/backdrop-wide.avif"><source media="(min-aspect-ratio: 1/1)" srcset="assets/img/backdrop-wide.jpg"><source type="image/avif" srcset="assets/img/backdrop-tall.avif"><img class="backdrop-art" src="assets/img/backdrop-tall.jpg" alt="" decoding="async" onload="this.classList.add('is-in')"></picture>
+  <div class="backdrop-light"></div>
+</div>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html" aria-label="Squishrot home">
+      <img class="brand-icon" src="assets/img/icon.png" alt="" width="40" height="40">
+      <img class="brand-word" src="assets/img/logo.png" alt="Squishrot" width="114" height="38">
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#den">Den</a>
+      <a href="index.html#trade">Trade</a>
+      <a href="index.html#jellies">Jellies</a>
+      <a href="pro.html" aria-current="page">Pro</a>
+      <a href="index.html#faq">FAQ</a>
+    </nav>
+    <a class="jelly-btn jelly-btn--sm" href="#get"><span>Get Squishrot</span><i class="bub" aria-hidden="true"></i><i class="bub" aria-hidden="true"></i></a>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============ PRO HERO ============ -->
+<section class="band band--pro pro-hero" id="pro-top" aria-labelledby="pro-title">
+  <div class="wrap split-row">
+    <div class="copy">
+      <p class="eyebrow-pill reveal"><span class="pro-chip">PRO</span> Squishrot Pro</p>
+      <h1 class="split pro-title" id="pro-title">Squishrot, turned <em class="pro-text">all the way up</em></h1>
+      <p class="lede reveal">Open drops from further away, find a rare jelly every day, fill a bigger Den and trade as much as you like. Everything in Squishrot stays free; Pro adds more of it.</p>
+      <div class="price reveal"><b>$4.99</b><span>a month<br>cancel anytime</span></div>
+      <div class="pro-cta reveal">
+        <a class="store-badge" href="#get" data-store><svg viewBox="0 0 384 512" aria-hidden="true"><path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg><span><small data-store-top>Coming soon to the</small><b>App Store</b></span></a>
+        <a class="ghost-link" href="#compare">Compare free and Pro <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3.5 8.5 8 13l4.5-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      </div>
+    </div>
+    <div class="phone-slot reveal">
+      <div class="phone" id="phone-pro" role="img" aria-label="Getting Pro in the app: holding the green and purple Pro jelly ball until it bursts, a flood of jelly stamps PRO and the six perks fly out.">
+        <div class="screen">
+          <video class="shot clip" data-clip="pro" poster="assets/clips/pro.jpg" muted playsinline loop preload="none" aria-hidden="true"></video>
+          <i class="finger" aria-hidden="true"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FREE AND PRO ============ -->
+<section class="sec pro-compare" id="compare" aria-labelledby="compare-title">
+  <div class="wrap center">
+    <p class="eyebrow eyebrow--green reveal">Free and Pro</p>
+    <h2 class="split" id="compare-title">Free is the whole game. Pro is more of it.</h2>
+  </div>
+  <div class="wrap compare-wrap reveal">
+    <div class="compare-scroll">
+      <table class="compare">
+        <caption class="sr-only">What you get free and with Squishrot Pro</caption>
+        <thead><tr><th scope="col"><span class="sr-only">Feature</span></th><th scope="col">Free</th><th scope="col"><span class="pro-chip">PRO</span><span class="sr-only"> Squishrot Pro</span></th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Reach to open a drop</th><td>80&#8239;m</td><td>150&#8239;m</td></tr>
+          <tr><th scope="row">Daily Pro drop</th><td><span class="no" aria-label="Not included">–</span></td><td>A Rare-or-better jelly every day</td></tr>
+          <tr><th scope="row">Jellies on your Den’s bed</th><td>4, more with coins</td><td>4 more on top</td></tr>
+          <tr><th scope="row">Showcase spots</th><td>4</td><td>8</td></tr>
+          <tr><th scope="row">Trade listings</th><td>1 at a time</td><td>Unlimited</td></tr>
+          <tr><th scope="row">Trade offers</th><td>2 a week</td><td>Unlimited</td></tr>
+          <tr><th scope="row">Streak freezes</th><td><span class="no" aria-label="Not included">–</span></td><td>2 a month</td></tr>
+          <tr><th scope="row">Streak rescue</th><td><span class="no" aria-label="Not included">–</span></td><td>1 a month</td></tr>
+          <tr><th scope="row">Jelly of the Month</th><td><span class="no" aria-label="Not included">–</span></td><td>A Shiny every month</td></tr>
+          <tr><th scope="row">Pro badge and glow</th><td><span class="no" aria-label="Not included">–</span></td><td><svg class="tick" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5 6.5 11.5 12.5 4.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="sr-only">Included</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ THE SIX PERKS ============ -->
+<section class="sec pro-perks" id="perks" aria-labelledby="perks-title">
+  <div class="wrap center">
+    <p class="eyebrow eyebrow--purple reveal">What Pro adds</p>
+    <h2 class="split" id="perks-title">Six perks, every month</h2>
+  </div>
+  <div class="wrap perk-grid">
+    <article class="perk reveal"><i class="perk-ico perk-ico--reach"></i><h3>Bigger Den &amp; reach</h3><p>Drops open from 150&#8239;m instead of 80&#8239;m, so the jelly across the road is yours. At home, your Den’s bed holds four more jellies, each one earning coins every hour.</p></article>
+    <article class="perk perk--art reveal"><i class="perk-ico perk-ico--drop"></i><h3>Daily Pro drop</h3><p>Every day a Pro drop lands close by on your map with a Rare-or-better jelly inside. Hold it until it pops.</p><img class="perk-jelly" data-jelly="cappuccino-assassino" data-finish="rare" alt=""></article>
+    <article class="perk reveal"><i class="perk-ico perk-ico--trade"></i><h3>Unlimited trading</h3><p>Post as many listings and make as many offers as you like, with jellies, coins or both. Free players keep one listing up and make two offers a week.</p></article>
+    <article class="perk reveal"><i class="perk-ico perk-ico--freeze"></i><h3>Streak freeze &amp; rescue</h3><p>Two freezes a month cover a missed day so your streak carries on, and once a month a rescue brings back a streak of three days or more that broke.</p></article>
+    <article class="perk perk--art reveal"><i class="perk-ico perk-ico--crown"></i><h3>Pro profile</h3><p>Eight showcase spots instead of four, plus a Pro badge and glow that other players see on your profile and listings.</p><img class="perk-jelly" data-jelly="la-vaca-saturno-saturnita" data-finish="diamond" alt=""></article>
+    <article class="perk perk--art reveal"><i class="perk-ico perk-ico--gift"></i><h3>Jelly of the Month</h3><p>A Shiny jelly to claim every month, foil and all, just for being Pro.</p><img class="perk-jelly" data-jelly="tralalero-tralala" data-finish="shiny" alt=""></article>
+  </div>
+</section>
+
+<!-- ============ HOW PRO WORKS ============ -->
+<section class="sec pro-how" id="how-pro" aria-labelledby="how-pro-title">
+  <div class="wrap center">
+    <p class="eyebrow eyebrow--sky reveal">How Pro works</p>
+    <h2 class="split" id="how-pro-title">Simple to start, simple to stop</h2>
+  </div>
+  <ol class="wrap pro-steps">
+    <li class="reveal"><b>Get it in the app</b><p>Open <strong>Profile</strong> and tap <strong>Get Pro</strong>. Hold the Pro jelly until it pops to see everything you get, then subscribe with your Apple Account.</p></li>
+    <li class="reveal"><b>$4.99 a month</b><p>Pro renews every month through the App Store unless you cancel at least 24 hours before the period ends.</p></li>
+    <li class="reveal"><b>Cancel any time</b><p>Open iPhone Settings, tap your name, then <strong>Subscriptions → Squishrot</strong>. Pro stays on until the end of the period you’ve paid for.</p></li>
+    <li class="reveal"><b>New phone?</b><p>Tap <strong>Profile → Settings → Restore purchases</strong> with the Apple Account you subscribed with.</p></li>
+  </ol>
+</section>
+
+<!-- ============ PRO FAQ ============ -->
+<section class="sec faq" id="pro-faq" aria-labelledby="pro-faq-title">
+  <div class="wrap center">
+    <p class="eyebrow eyebrow--green reveal">Pro questions</p>
+    <h2 class="split" id="pro-faq-title">Before you go Pro</h2>
+  </div>
+  <div class="wrap faq-list">
+    <details class="reveal"><summary>Do I need Pro to play?</summary><p>No. Squishrot is free to download and play: the map, drops, your Den, the Blender, trading and the leaderboard are all there without Pro. Pro gives you more of each.</p></details>
+    <details class="reveal"><summary>How much does Pro cost where I live?</summary><p>Pro is $4.99 a month in the US. Prices vary by country, and the App Store shows your local price before you subscribe.</p></details>
+    <details class="reveal"><summary>When am I charged?</summary><p>When you subscribe, then every month after that. Pro renews automatically unless you cancel at least 24 hours before the period ends.</p></details>
+    <details class="reveal"><summary>How do I cancel?</summary><p>Open iPhone Settings, tap your name, then Subscriptions → Squishrot, or follow <a href="https://support.apple.com/en-us/118428">Apple’s steps</a>. Pro stays on until the end of the period you’ve paid for.</p></details>
+    <details class="reveal"><summary>I paid but Pro isn’t on</summary><p>Open Squishrot with an internet connection, then tap Profile → Settings → Restore purchases using the Apple Account you subscribed with. Still stuck? Email <a href="mailto:support@squishrot.com">support@squishrot.com</a>.</p></details>
+    <details class="reveal"><summary>Can younger players get Pro?</summary><p>Players under their country’s age of digital consent need a grown-up’s check before any purchase, Pro included.</p></details>
+  </div>
+</section>
+
+<!-- ============ FINAL ============ -->
+<section class="final final--pro" id="get" aria-labelledby="get-title">
+  <div class="final-jellies" aria-hidden="true">
+    <img data-jelly="glorbo-fruttodrillo" data-finish="diamond" style="--x:8%;--y:22%;--s:1;--d:0s" alt="">
+    <img data-jelly="lirili-larila" data-finish="shiny" style="--x:84%;--y:16%;--s:1.1;--d:-2s" alt="">
+    <img data-jelly="bobrito-bandito" data-finish="epic" style="--x:14%;--y:64%;--s:.8;--d:-4s" alt="">
+    <img data-jelly="ta-ta-ta-ta-sahur" data-finish="rare" style="--x:80%;--y:60%;--s:.9;--d:-1s" alt="">
+  </div>
+  <div class="wrap center final-copy">
+    <img class="final-icon reveal" src="assets/img/icon.png" alt="" width="132" height="132" loading="lazy">
+    <h2 class="split final-title" id="get-title">Start free. Go Pro whenever.</h2>
+    <p class="lede reveal">Download Squishrot, find your first jelly, and get Pro from your profile when you want more.</p>
+    <div class="reveal"><a class="store-badge store-badge--lg" href="#get" data-store><svg viewBox="0 0 384 512" aria-hidden="true"><path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg><span><small data-store-top>Coming soon to the</small><b>App Store</b></span></a></div>
+    <p class="final-meta reveal">Free · iPhone · In-app purchases</p>
+    <p class="wrap fine reveal">Prices shown in US dollars and may vary by country. Squishrot Pro renews every month unless cancelled at least 24 hours before the period ends. Manage or cancel it in your App Store account settings.</p>
+  </div>
+  <footer class="footer">
+    <div class="wrap footer-row">
+      <p>© 2026 Squishrot · Made with a lot of jelly</p>
+      <nav aria-label="Help"><a href="index.html">Home</a><a href="support.html">Support</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="mailto:support@squishrot.com">support@squishrot.com</a></nav>
+    </div>
+  </footer>
+</section>
+
+</main>
+
+</body></html>
