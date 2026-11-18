@@ -53,9 +53,11 @@ button { font: inherit; color: inherit; }
 .brand { display: flex; align-items: center; gap: 10px; margin-right: auto; text-decoration: none; border-radius: 12px; }
 .brand-icon { width: 40px; height: 40px; border-radius: 11px; box-shadow: 0 0 0 1px rgba(255, 255, 255, .14), 0 6px 16px -4px rgba(0, 0, 0, .6); }
 .brand-word { width: 114px; height: auto; filter: drop-shadow(0 2px 6px rgba(0, 0, 0, .5)); }
-.nav-links { display: flex; gap: 26px; }
+.nav-links { display: flex; align-items: center; gap: 26px; }
 .nav-links a { padding: 10px 0; color: var(--muted); font-size: 15px; font-weight: 700; text-decoration: none; transition: color .2s; }
 .nav-links a:hover, .nav-links a.is-active { color: var(--text); }
+.nav-links a { white-space: nowrap; }
+@media (max-width: 1180px) { .nav-links { gap: 18px; } .nav-inner { gap: 22px; } }
 @media (max-width: 980px) { .nav-links { display: none; } }
 @media (max-width: 360px) { .brand-word { display: none; } }
 
@@ -435,6 +437,10 @@ figure { margin: 0; }
   transition: transform .22s var(--ease-jelly);
   animation: pro-spin 3s linear infinite; }
 .get-pro .pro-chip { font-size: 14px; }
+/* In the header, a little smaller, among the links. */
+.nav-links .get-pro--nav { align-self: center; height: 38px; padding: 0 8px 0 13px; gap: 6px; color: #fff; font-size: 14px; }
+.nav-links .get-pro--nav .pro-chip { font-size: 12px; }
+.nav-links .get-pro--nav[aria-current="page"] { box-shadow: 0 0 22px -2px rgba(204, 0, 166, .55); }
 .get-pro::before { content: ""; position: absolute; inset: -1.8px; z-index: 1; padding: 2.4px; border-radius: inherit; background: conic-gradient(from var(--pro-spark), transparent 0 78%, rgba(255, 255, 255, .95) 90%, transparent 100%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); filter: blur(.6px); pointer-events: none; animation: pro-spark 1.64s linear infinite; }
 .get-pro::after { content: ""; position: absolute; inset: -6px; z-index: -1; border-radius: inherit; background: linear-gradient(90deg, #00abcc, #cc00a6); filter: blur(14px); opacity: .25; pointer-events: none; animation: pro-breathe 3.2s ease-in-out infinite; }
 .get-pro:hover { transform: translateY(-1px) scale(1.03); }
