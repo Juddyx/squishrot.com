@@ -270,7 +270,7 @@
         var finish = FINISH[row.bestRarity];
         return '<li data-key="' + esc(key) + '" class="live-row' + (row.rank <= 3 ? ' live-row--top live-row--' + row.rank : '') + '">' +
           '<span class="live-rank">' + row.rank + '</span>' + avatar(row) +
-          '<span class="live-name"><b>' + esc(row.displayName) + '</b>' + (row.isPro ? '<span class="pro-chip">PRO</span>' : '') +
+          '<span class="live-name"><b>' + esc(row.displayName) + '</b>' + (row.isPro ? '<span class="pro-chip"><b>PRO</b></span>' : '') +
           (finish ? '<span class="chip chip--' + finish + '">' + LABEL[row.bestRarity] + '</span>' : '') + '</span>' +
           move(row) + '<span class="live-score">' + fmt(shown[key] != null ? shown[key] : row.score) + '</span></li>';
       }).join('');

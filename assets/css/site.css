@@ -393,8 +393,57 @@ figure { margin: 0; }
 /* ---------- Pro page (pro.html) ---------- */
 /* The app's Pro colours: the PRO chip's green and purple. */
 .nav-links a[aria-current="page"] { color: var(--text); }
-.pro-chip { display: inline-block; padding: 3px 9px 2px; border-radius: 999px; background: linear-gradient(100deg, #22c55e, #7c6dff 55%, #c35cff); color: #fff; font-size: 12px; font-weight: 900; letter-spacing: .08em; vertical-align: 1px; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 6px 16px -6px rgba(160, 90, 255, .8); }
-.eyebrow-pill .pro-chip { margin-right: 6px; }
+/* The PRO tag, as the app draws it (ProChip): a little blob of Pro's jelly, rich teal into
+   violet with a thin rainbow rim, "PRO" in gummy letters (pale and glowing, deep violet beneath),
+   a soft sheen and a spot of light over its top, bubbles drifting up inside, a band of light
+   sweeping across every 3.4 s and a sparkle twinkling at its corner every 2.6 s. Sized by its
+   font-size, in the app's proportions: letters 0.58 of its height, sides 0.42. */
+@property --pro-spin { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@property --pro-spark { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.pro-chip { --rim: max(1px, .1em); position: relative; display: inline-flex; align-items: center; justify-content: center; height: 1.72em; padding: 0 .72em; border: var(--rim) solid transparent; border-radius: 999px; font-size: 12px; font-weight: 800; letter-spacing: .035em; line-height: 1; vertical-align: middle; isolation: isolate;
+  background:
+    linear-gradient(110deg, transparent 40%, rgba(255, 255, 255, .55) 50%, transparent 60%) 100% 0 / 300% 100% no-repeat padding-box,
+    radial-gradient(14% 12% at 22% 24%, rgba(255, 255, 255, .7), transparent 100%) padding-box,
+    linear-gradient(rgba(255, 255, 255, .32), rgba(255, 255, 255, 0) 48%) padding-box,
+    radial-gradient(130% 110% at 50% 115%, rgba(204, 0, 166, .4), transparent 62%) padding-box,
+    linear-gradient(135deg, #1f809e, #573db8 55%, #752ea8) padding-box,
+    conic-gradient(#00cc45, #00abcc, #006ef5, #cc00a6, #00cc45) border-box;
+  box-shadow: 0 .3em .9em -.35em rgba(160, 90, 255, .8);
+  animation: pro-shine 3.4s linear infinite; }
+.pro-chip b { position: relative; z-index: 2; font-weight: 800; background: linear-gradient(180deg, #fff 8%, #e6f8ff 40%, #dbf5ff 55%, #d6c7ff 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 .1em 0 rgba(20, 13, 77, .85)) drop-shadow(0 0 .2em rgba(204, 0, 166, .45)); }
+/* Bubbles drifting up through the gel. */
+.pro-chip::after { content: ""; position: absolute; inset: 0; z-index: 1; border-radius: inherit; pointer-events: none;
+  background:
+    radial-gradient(circle at 50% .16em, rgba(255, 255, 255, .2) 0 .09em, rgba(255, 255, 255, .75) .09em .12em, transparent .155em) 20% 0 / .32em 2.4em repeat-y,
+    radial-gradient(circle at 50% .13em, rgba(255, 255, 255, .2) 0 .07em, rgba(255, 255, 255, .75) .07em .1em, transparent .125em) 78% .8em / .26em 2.4em repeat-y,
+    radial-gradient(circle at 50% .11em, rgba(255, 255, 255, .2) 0 .06em, rgba(255, 255, 255, .75) .06em .085em, transparent .105em) 50% 1.6em / .22em 2.4em repeat-y;
+  animation: pro-bubbles 2.1s linear infinite; }
+/* A four-pointed sparkle at its top corner. */
+.pro-chip::before { content: ""; position: absolute; z-index: 3; top: -.42em; right: -.42em; width: .97em; height: .97em; background: #fff; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 -1 2 2'%3E%3Cpath d='M0-1Q.18-.18 1 0Q.18.18 0 1Q-.18.18-1 0Q-.18-.18 0-1Z'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 -1 2 2'%3E%3Cpath d='M0-1Q.18-.18 1 0Q.18.18 0 1Q-.18.18-1 0Q-.18-.18 0-1Z'/%3E%3C/svg%3E") center / contain no-repeat; filter: drop-shadow(0 0 .2em #dcc7ff); opacity: 0; transform: scale(.1); pointer-events: none; animation: pro-twinkle 2.6s linear infinite; }
+@keyframes pro-shine { 0%, 70% { background-position: 100% 0, 0 0, 0 0, 0 0, 0 0, 0 0; } 92%, 100% { background-position: 0% 0, 0 0, 0 0, 0 0, 0 0, 0 0; } }
+@keyframes pro-bubbles { from { background-position: 20% 0, 78% .8em, 50% 1.6em; } to { background-position: 20% -2.4em, 78% -1.6em, 50% -.8em; } }
+@keyframes pro-twinkle { 0%, 62% { opacity: 0; transform: scale(.1) rotate(0); } 72% { opacity: 1; transform: scale(1) rotate(60deg); } 84%, 100% { opacity: 0; transform: scale(.1) rotate(110deg); } }
+/* "Get PRO", the app's Get Pro button (ProfileView.getProButton): a dark gel pill with "Get"
+   beside the PRO tag, Pro's colours kept to a thin rim. The rainbow races round the rim with a
+   bright spark chasing it, and a soft teal-and-pink glow behind it slowly breathes. */
+.get-pro { position: relative; display: inline-flex; align-items: center; gap: 7px; height: 44px; padding: 0 10px 0 16px; border: 1.8px solid transparent; border-radius: 999px; color: #fff; font-size: 16px; font-weight: 800; letter-spacing: -.01em; text-decoration: none; white-space: nowrap;
+  background:
+    linear-gradient(rgba(255, 255, 255, .14), rgba(255, 255, 255, 0) 50%) padding-box,
+    linear-gradient(#2b2b2b, #121212) padding-box,
+    conic-gradient(from var(--pro-spin), #00cc45, #00abcc, #006ef5, #cc00a6, #00cc45) border-box;
+  box-shadow: 0 0 20px -4px rgba(204, 0, 166, .3);
+  transition: transform .22s var(--ease-jelly);
+  animation: pro-spin 3s linear infinite; }
+.get-pro .pro-chip { font-size: 14px; }
+.get-pro::before { content: ""; position: absolute; inset: -1.8px; z-index: 1; padding: 2.4px; border-radius: inherit; background: conic-gradient(from var(--pro-spark), transparent 0 78%, rgba(255, 255, 255, .95) 90%, transparent 100%); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0); filter: blur(.6px); pointer-events: none; animation: pro-spark 1.64s linear infinite; }
+.get-pro::after { content: ""; position: absolute; inset: -6px; z-index: -1; border-radius: inherit; background: linear-gradient(90deg, #00abcc, #cc00a6); filter: blur(14px); opacity: .25; pointer-events: none; animation: pro-breathe 3.2s ease-in-out infinite; }
+.get-pro:hover { transform: translateY(-1px) scale(1.03); }
+.get-pro:active { transform: scale(.95); }
+@keyframes pro-spin { to { --pro-spin: 360deg; } }
+@keyframes pro-spark { to { --pro-spark: 360deg; } }
+@keyframes pro-breathe { 0%, 100% { opacity: .25; inset: -4px; } 50% { opacity: .65; inset: -9px; } }
+@media (prefers-reduced-motion: reduce) { .pro-chip, .pro-chip::after, .pro-chip::before, .get-pro, .get-pro::before, .get-pro::after { animation: none; } }
+.eyebrow-pill .pro-chip { margin-right: 8px; letter-spacing: .035em; font-size: 12px; }
 .pro-hero { padding-top: calc(var(--nav-h) + clamp(48px, 7vw, 96px)); }
 .pro-title { font-size: clamp(46px, 6.4vw, 86px); margin-bottom: 24px; }
 .pro-text { font-style: normal; }
@@ -546,7 +595,7 @@ figure { margin: 0; }
 .live-name { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; min-width: 0; }
 .live-name b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; font-size: 16px; }
 .live-name .chip { height: 22px; padding: 0 9px; font-size: 11px; }
-.live-name .pro-chip { font-size: 10px; padding: 2px 7px 1px; }
+.live-name .pro-chip { font-size: 10px; }
 .live-move { min-width: 42px; color: var(--dim); font-size: 13px; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; }
 .live-move--up { color: var(--green-hi); } .live-move--down { color: #ff7a85; } .live-move--new { color: var(--sky); }
 .live-score { min-width: 76px; color: var(--coin); font-size: 17px; font-weight: 800; text-align: right; font-variant-numeric: tabular-nums; transition: transform .25s var(--ease-jelly); }
