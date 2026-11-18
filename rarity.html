@@ -1,0 +1,272 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Rarity &amp; Odds</title>
+  <meta name="description" content="The real odds of every Squishrot finish, from Common (60%) to Diamond (1 in 1,000), what each is worth, and a calculator for your chances.">
+  <!-- The App Store link, as on index.html: paste it in both pages once Squishrot is live. -->
+  <meta name="app-store-url" content="">
+  <link rel="preload" href="assets/fonts/plus-jakarta-sans-800.woff" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script>
+    /* AVIF check: jelly art is AVIF, with PNG for the few browsers without it. */
+    window.avifReady = new Promise(function (done) {
+      var probe = new Image();
+      probe.onload = function () { done(true); };
+      probe.onerror = function () { document.documentElement.classList.add('no-avif'); done(false); };
+      probe.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAE1pUHJhdmlmbWlhZm1pZjEAAAHobWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAAOcGl0bQAAAAAAAQAAAE1paW5mAAAAAAADAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAFWluZmUCAAABAAIAAGF2MDEAAAAAFWluZmUCAAABAAMAAEV4aWYAAAAAKGlyZWYAAAAAAAAADmF1eGwAAgABAAEAAAAOY2RzYwADAAEAAQAAANppcHJwAAAAsWlwY28AAAATY29scm5jbHgAAgACAAaAAAAADGNsbGkAywBAAAAAFGlzcGUAAAAAAAAAAgAAAAIAAAAJaXJvdAAAAAAQcGl4aQAAAAADCAgIAAAADnBpeGkAAAAAAQgAAAA3YXV4QwAAAAB1cm46bXBlZzpoZXZjOjIwMTU6YXV4aWQ6MQAAAAAMAAAACE4BpQQAAf5AAAAADGF2MUOBAAwAAAAADGF2MUOBABwAAAAAIWlwbWEAAAAAAAAAAgABBoECAwWIhAACBQMGh4mEAAAAOmlsb2MAAAAARAAAAwABAAAAAQAAAmYAAAApAAIAAAABAAACjwAAAB0AAwAAAAEAAAIYAAAATgAAAAFtZGF0AAAAAAAAAKQAAAAGRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAAqADAAQAAAABAAAAAgAAAAASAAoMAAAAAAZ//AgQEDQgMhcQAZIACCCCIADb235ba5xLJkSGy4OYkRIACggAAAAABn/8FTIPEAGOACCIArFiH7QUuqOu';
+    });
+    document.documentElement.classList.add('js'); document.documentElement.lang = 'en';
+    /* If the site script never runs, show everything rather than leave it hidden. */
+    setTimeout(function () { if (!window.siteReady) document.documentElement.classList.remove('js'); }, 4000);
+  </script>
+  <script src="assets/js/data.js" defer></script>
+  <script src="assets/js/site.js" defer></script>
+<!-- ============ BACKDROP: the app's page backdrop, as on the home page ============ -->
+<div class="backdrop" aria-hidden="true">
+  <picture><source media="(min-aspect-ratio: 1/1)" type="image/avif" srcset="assets/img/backdrop-wide.avif"><source media="(min-aspect-ratio: 1/1)" srcset="assets/img/backdrop-wide.jpg"><source type="image/avif" srcset="assets/img/backdrop-tall.avif"><img class="backdrop-art" src="assets/img/backdrop-tall.jpg" alt="" decoding="async" onload="this.classList.add('is-in')"></picture>
+  <div class="backdrop-light"></div>
+</div>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html" aria-label="Squishrot home">
+      <img class="brand-icon" src="assets/img/icon.png" alt="" width="40" height="40">
+      <img class="brand-word" src="assets/img/logo.png" alt="Squishrot" width="114" height="38">
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#den">Den</a>
+      <a href="index.html#trade">Trade</a>
+      <a href="rarity.html" aria-current="page">Rarity</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="pro.html">Pro</a>
+      <a href="index.html#faq">FAQ</a>
+    </nav>
+    <a class="jelly-btn jelly-btn--sm" href="#get"><span>Get Squishrot</span><i class="bub" aria-hidden="true"></i><i class="bub" aria-hidden="true"></i></a>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============ RARITY HERO ============ -->
+<section class="sec page-hero" id="rarity-top" aria-labelledby="rarity-title">
+  <div class="wrap center">
+    <p class="eyebrow-pill reveal">Rarity &amp; odds</p>
+    <h1 class="split page-title" id="rarity-title">How rare is <em class="pro-text">rare</em>?</h1>
+    <p class="lede reveal">Every jelly comes in six finishes, from Common to Diamond. Here are the real odds of finding each one, the same for every player and set by the game’s server.</p>
+  </div>
+  <div class="wrap finish-steps" aria-label="One jelly in all six finishes, with the chance of each on the map">
+      <figure class="finish-step reveal"><img data-jelly="tralalero-tralala" data-finish="common" alt="Tralalero Tralala, Common" width="160" height="160"><figcaption><span class="chip chip--common">Common</span><span>1 in 1.7</span></figcaption></figure>
+      <figure class="finish-step reveal"><img data-jelly="tralalero-tralala" data-finish="rare" alt="Tralalero Tralala, Rare" width="160" height="160"><figcaption><span class="chip chip--rare">Rare</span><span>1 in 3.7</span></figcaption></figure>
+      <figure class="finish-step reveal"><img data-jelly="tralalero-tralala" data-finish="epic" alt="Tralalero Tralala, Epic" width="160" height="160"><figcaption><span class="chip chip--epic">Epic</span><span>1 in 11</span></figcaption></figure>
+      <figure class="finish-step reveal"><img data-jelly="tralalero-tralala" data-finish="sketch" alt="Tralalero Tralala, Sketch" width="160" height="160"><figcaption><span class="chip chip--sketch">Sketch</span><span>1 in 36</span></figcaption></figure>
+      <figure class="finish-step reveal"><img data-jelly="tralalero-tralala" data-finish="shiny" alt="Tralalero Tralala, Shiny" width="160" height="160"><figcaption><span class="chip chip--shiny">Shiny</span><span>1 in 143</span></figcaption></figure>
+      <figure class="finish-step reveal"><img data-jelly="tralalero-tralala" data-finish="diamond" alt="Tralalero Tralala, Diamond" width="160" height="160"><figcaption><span class="chip chip--diamond">Diamond</span><span>1 in 1,000</span></figcaption></figure>
+  </div>
+</section>
+
+<!-- ============ THE ODDS ============ -->
+<section class="sec" id="odds" aria-labelledby="odds-title">
+  <div class="wrap center">
+    <p class="eyebrow eyebrow--green reveal">The odds</p>
+    <h2 class="split" id="odds-title">What’s inside a drop</h2>
+    <p class="lede reveal">Each drop on the map holds one jelly. Its finish is rolled when the drop appears, then one of the 28 jellies is picked, each just as likely as the next.</p>
+  </div>
+  <div class="wrap compare-wrap reveal">
+    <div class="compare-scroll">
+      <table class="compare odds">
+        <caption class="sr-only">The chance of each finish in a map drop and in Pro’s daily drop</caption>
+        <thead><tr><th scope="col">Finish</th><th scope="col">Map drop</th><th scope="col">Odds</th><th scope="col"><span class="pro-chip">PRO</span> daily drop</th></tr></thead>
+        <tbody>
+          <tr><th scope="row"><span class="chip chip--common">Common</span></th><td><b>60%</b></td><td>1 in 1.7</td><td><span class="no" aria-label="Never">–</span></td></tr>
+          <tr><th scope="row"><span class="chip chip--rare">Rare</span></th><td><b>27%</b></td><td>1 in 3.7</td><td>68%</td></tr>
+          <tr><th scope="row"><span class="chip chip--epic">Epic</span></th><td><b>9.4%</b></td><td>1 in 11</td><td>24%</td></tr>
+          <tr><th scope="row"><span class="chip chip--sketch">Sketch</span></th><td><b>2.8%</b></td><td>1 in 36</td><td>6%</td></tr>
+          <tr><th scope="row"><span class="chip chip--shiny">Shiny</span></th><td><b>0.7%</b></td><td>1 in 143</td><td>1.7%</td></tr>
+          <tr><th scope="row"><span class="chip chip--diamond">Diamond</span></th><td><b>0.1%</b></td><td>1 in 1,000</td><td>0.3%</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">Pro’s daily drop is always Rare or better. <a href="pro.html">More about Pro</a></p>
+  </div>
+</section>
+
+<!-- ============ ONE EXACT JELLY ============ -->
+<section class="sec" id="exact" aria-labelledby="exact-title">
+  <div class="wrap split-row">
+    <div class="copy">
+      <p class="eyebrow eyebrow--purple reveal">The rarest finds</p>
+      <h2 class="split" id="exact-title">One jelly, one finish</h2>
+      <p class="lede reveal">Hunting one jelly in one finish? Split its finish’s odds 28 ways. A Diamond of the jelly you want is about 1 in 28,000 drops: the rarest find in Squishrot.</p>
+      <div class="compare-scroll compare-scroll--narrow reveal">
+        <table class="compare exact">
+          <caption class="sr-only">The chance that a map drop is one particular jelly in each finish</caption>
+          <thead><tr><th scope="col">Finish</th><th scope="col">One exact jelly</th></tr></thead>
+          <tbody>
+          <tr><th scope="row"><span class="chip chip--common">Common</span></th><td>1 in 47</td></tr>
+          <tr><th scope="row"><span class="chip chip--rare">Rare</span></th><td>1 in 104</td></tr>
+          <tr><th scope="row"><span class="chip chip--epic">Epic</span></th><td>1 in 298</td></tr>
+          <tr><th scope="row"><span class="chip chip--sketch">Sketch</span></th><td>1 in 1,000</td></tr>
+          <tr><th scope="row"><span class="chip chip--shiny">Shiny</span></th><td>1 in 4,000</td></tr>
+          <tr><th scope="row"><span class="chip chip--diamond">Diamond</span></th><td>1 in 28,000</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="picker reveal" id="picker">
+      <div class="picker-stage"><img id="picker-img" data-jelly="la-vaca-saturno-saturnita" data-finish="diamond" alt="" width="300" height="300"></div>
+      <label class="picker-label" for="picker-jelly">Jelly</label>
+      <select class="picker-select" id="picker-jelly"></select>
+      <div class="picker-finishes" role="radiogroup" aria-label="Finish"><button type="button" class="chip chip--common" role="radio" aria-checked="false" data-finish="common">Common</button><button type="button" class="chip chip--rare" role="radio" aria-checked="false" data-finish="rare">Rare</button><button type="button" class="chip chip--epic" role="radio" aria-checked="false" data-finish="epic">Epic</button><button type="button" class="chip chip--sketch" role="radio" aria-checked="false" data-finish="sketch">Sketch</button><button type="button" class="chip chip--shiny" role="radio" aria-checked="false" data-finish="shiny">Shiny</button><button type="button" class="chip chip--diamond" role="radio" aria-checked="true" data-finish="diamond">Diamond</button></div>
+      <p class="picker-odds" aria-live="polite"><b id="picker-one">1 in 28,000</b><span id="picker-name">per map drop</span></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ YOUR CHANCES ============ -->
+<section class="sec" id="chances" aria-labelledby="chances-title">
+  <div class="wrap center">
+    <p class="eyebrow eyebrow--sky reveal">Your chances</p>
+    <h2 class="split" id="chances-title">How many drops until a Diamond?</h2>
+    <p class="lede reveal">Slide to the number of drops you open and see your chance of finding at least one of each finish. You can open up to 40 drops a day.</p>
+  </div>
+  <div class="wrap calc reveal" id="calc">
+    <div class="calc-top">
+      <label class="calc-label" for="calc-drops"><b id="calc-count">280</b> <span>drops opened</span></label>
+      <div class="calc-presets" role="group" aria-label="Quick picks">
+        <button type="button" data-drops="40">A day (40)</button>
+        <button type="button" data-drops="280">A week (280)</button>
+        <button type="button" data-drops="1200">A month (1,200)</button>
+      </div>
+    </div>
+    <input class="calc-range" id="calc-drops" type="range" min="1" max="3000" step="1" value="280">
+    <ul class="calc-bars" id="calc-bars"></ul>
+    <p class="table-note">Map drops only, at the odds above. Every drop is its own roll, so nothing is ever guaranteed and a lucky find can come on the first drop.</p>
+  </div>
+</section>
+
+<!-- ============ WORTH ============ -->
+<section class="sec" id="worth" aria-labelledby="worth-title">
+  <div class="wrap center">
+    <p class="eyebrow eyebrow--gold reveal">What a finish is worth</p>
+    <h2 class="split" id="worth-title">Rarer jellies earn more</h2>
+    <p class="lede reveal">On your Den’s bed a jelly earns coins every hour, and every jelly you own adds points to your <a class="inline-link" href="leaderboard.html">leaderboard</a> score.</p>
+  </div>
+  <div class="wrap compare-wrap compare-wrap--narrow reveal">
+    <div class="compare-scroll">
+      <table class="compare worth">
+        <caption class="sr-only">Coins an hour in the Den and leaderboard points for each finish</caption>
+        <thead><tr><th scope="col">Finish</th><th scope="col">In your Den</th><th scope="col">Leaderboard points</th></tr></thead>
+        <tbody>
+          <tr><th scope="row"><span class="chip chip--common">Common</span></th><td>15 coins</td><td>90</td></tr>
+          <tr><th scope="row"><span class="chip chip--rare">Rare</span></th><td>25 coins</td><td>240</td></tr>
+          <tr><th scope="row"><span class="chip chip--epic">Epic</span></th><td>40 coins</td><td>620</td></tr>
+          <tr><th scope="row"><span class="chip chip--sketch">Sketch</span></th><td>60 coins</td><td>1,100</td></tr>
+          <tr><th scope="row"><span class="chip chip--shiny">Shiny</span></th><td>75 coins</td><td>1,400</td></tr>
+          <tr><th scope="row"><span class="chip chip--diamond">Diamond</span></th><td>90 coins</td><td>1,800</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note">Den coins are per hour, per jelly on the bed.</p>
+  </div>
+</section>
+
+<!-- ============ THE BLENDER ============ -->
+<section class="sec" id="blend" aria-labelledby="blend-title">
+  <div class="wrap center">
+    <p class="eyebrow eyebrow--green reveal">Another way up</p>
+    <h2 class="split" id="blend-title">Three in, one rarer out</h2>
+    <p class="lede reveal">Put three jellies of one finish in the Blender and out comes one random jelly of the next finish up. Three Shinies always make a Diamond. Favourites stay out of the Blender.</p>
+  </div>
+  <ol class="wrap ladder reveal" aria-label="The Blender’s ladder, three of each finish for one of the next"><li><span class="chip chip--common">Common</span></li><li><span class="chip chip--rare">Rare</span></li><li><span class="chip chip--epic">Epic</span></li><li><span class="chip chip--sketch">Sketch</span></li><li><span class="chip chip--shiny">Shiny</span></li><li><span class="chip chip--diamond">Diamond</span></li></ol>
+</section>
+
+<p class="wrap fine reveal">Odds are per drop and set by Squishrot’s server, the same for every player. Coin packs and Squishrot Pro are optional in-app purchases.</p>
+
+<!-- ============ FINAL ============ -->
+<section class="final" id="get" aria-labelledby="get-title">
+  <div class="final-jellies" aria-hidden="true">
+    <img data-jelly="la-vaca-saturno-saturnita" data-finish="diamond" style="--x:8%;--y:22%;--s:1;--d:0s" alt="">
+    <img data-jelly="graipussi-medussi" data-finish="shiny" style="--x:84%;--y:16%;--s:1.1;--d:-2s" alt="">
+    <img data-jelly="frigo-camelo" data-finish="sketch" style="--x:14%;--y:64%;--s:.8;--d:-4s" alt="">
+    <img data-jelly="lobster-kitten" data-finish="epic" style="--x:80%;--y:60%;--s:.9;--d:-1s" alt="">
+  </div>
+  <div class="wrap center final-copy">
+    <img class="final-icon reveal" src="assets/img/icon.png" alt="" width="132" height="132" loading="lazy">
+    <h2 class="split final-title" id="get-title">Your Diamond is out there</h2>
+    <p class="lede reveal">Every drop is a fresh roll. Open the map and see what’s waiting nearby.</p>
+    <div class="reveal"><a class="store-badge store-badge--lg" href="#get" data-store><svg viewBox="0 0 384 512" aria-hidden="true"><path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg><span><small data-store-top>Coming soon to the</small><b>App Store</b></span></a></div>
+    <p class="final-meta reveal">Free · iPhone · In-app purchases</p>
+  </div>
+  <footer class="footer">
+    <div class="wrap footer-row">
+      <p>© 2026 Squishrot · Made with a lot of jelly</p>
+      <nav aria-label="Help"><a href="index.html">Home</a><a href="rarity.html">Rarity</a><a href="leaderboard.html">Leaderboard</a><a href="pro.html">Pro</a><a href="support.html">Support</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="mailto:support@squishrot.com">support@squishrot.com</a></nav>
+    </div>
+  </footer>
+</section>
+
+</main>
+
+</body></html>
+<script>
+  /* The odds calculator and jelly picker: the same odds as the tables above. */
+  (function () {
+    var ODDS = { common: 0.6, rare: 0.27, epic: 0.094, sketch: 0.028, shiny: 0.007, diamond: 0.001 };
+    var LABEL = { common: 'Common', rare: 'Rare', epic: 'Epic', sketch: 'Sketch', shiny: 'Shiny', diamond: 'Diamond' };
+    var JELLIES = 28;
+    var fmt = function (n) { return Math.round(n).toLocaleString('en-US'); };
+    var chance = function (p, n) { return 1 - Math.pow(1 - p, n); };
+    var shown = function (c) {
+      if (c >= 0.9995) return '99.9%+';
+      if (c < 0.001) return 'under 0.1%';
+      return (c * 100).toFixed(c < 0.1 ? 1 : 0) + '%';
+    };
+    function start() {
+      var range = document.getElementById('calc-drops'), count = document.getElementById('calc-count'), bars = document.getElementById('calc-bars');
+      if (range && bars) {
+        bars.innerHTML = Object.keys(ODDS).map(function (k) {
+          return '<li><span class="chip chip--' + k + '">' + LABEL[k] + '</span><span class="calc-track"><i class="calc-fill calc-fill--' + k + '"></i></span><b data-k="' + k + '"></b></li>';
+        }).join('');
+        var draw = function () {
+          var n = +range.value;
+          count.textContent = fmt(n);
+          Object.keys(ODDS).forEach(function (k) {
+            var c = chance(ODDS[k], n);
+            bars.querySelector('.calc-fill--' + k).style.transform = 'scaleX(' + c.toFixed(4) + ')';
+            bars.querySelector('b[data-k="' + k + '"]').textContent = shown(c);
+          });
+          range.style.setProperty('--at', ((n - 1) / 2999 * 100).toFixed(2) + '%');
+        };
+        range.addEventListener('input', draw);
+        document.querySelectorAll('[data-drops]').forEach(function (b) {
+          b.addEventListener('click', function () { range.value = b.dataset.drops; draw(); });
+        });
+        draw();
+      }
+      var picker = document.getElementById('picker');
+      if (picker && window.SQUISH) {
+        var select = document.getElementById('picker-jelly'), img = document.getElementById('picker-img');
+        var one = document.getElementById('picker-one'), name = document.getElementById('picker-name');
+        var finish = 'diamond';
+        select.innerHTML = window.SQUISH.jellies.map(function (j) { return '<option value="' + j.id + '">' + j.name + '</option>'; }).join('');
+        select.value = 'la-vaca-saturno-saturnita';
+        var avif = !document.documentElement.classList.contains('no-avif');
+        var draw2 = function () {
+          var id = select.value, j = window.SQUISH.jellies.find(function (x) { return x.id === id; });
+          img.src = 'assets/img/jellies/' + id + '-' + finish + (avif ? '.avif' : '-sm.png');
+          img.alt = j.name + ', ' + LABEL[finish];
+          one.textContent = '1 in ' + fmt(JELLIES / ODDS[finish]);
+          name.textContent = LABEL[finish] + ' ' + j.name + ' per map drop';
+          picker.querySelectorAll('.picker-finishes .chip').forEach(function (c) { c.setAttribute('aria-checked', String(c.dataset.finish === finish)); });
+        };
+        select.addEventListener('change', draw2);
+        picker.querySelectorAll('.picker-finishes .chip').forEach(function (c) {
+          c.addEventListener('click', function () { finish = c.dataset.finish; draw2(); });
+        });
+        draw2();
+      }
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+  })();
+</script>

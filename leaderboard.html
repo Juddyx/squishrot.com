@@ -1,0 +1,195 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Squishrot Leaderboard</title>
+  <meta name="description" content="How the Squishrot leaderboard works: points for every jelly, trade and streak day, monthly seasons and the cups they award.">
+  <!-- The App Store link, as on index.html: paste it in both pages once Squishrot is live. -->
+  <meta name="app-store-url" content="">
+  <link rel="preload" href="assets/fonts/plus-jakarta-sans-800.woff" as="font" type="font/woff" crossorigin>
+  <link rel="stylesheet" href="assets/css/site.css">
+  <script>
+    /* AVIF check: jelly art is AVIF, with PNG for the few browsers without it. */
+    window.avifReady = new Promise(function (done) {
+      var probe = new Image();
+      probe.onload = function () { done(true); };
+      probe.onerror = function () { document.documentElement.classList.add('no-avif'); done(false); };
+      probe.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAE1pUHJhdmlmbWlhZm1pZjEAAAHobWV0YQAAAAAAAAAhaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAAAAAAAkZGluZgAAABxkcmVmAAAAAAAAAAEAAAAMdXJsIAAAAAEAAAAOcGl0bQAAAAAAAQAAAE1paW5mAAAAAAADAAAAFWluZmUCAAAAAAEAAGF2MDEAAAAAFWluZmUCAAABAAIAAGF2MDEAAAAAFWluZmUCAAABAAMAAEV4aWYAAAAAKGlyZWYAAAAAAAAADmF1eGwAAgABAAEAAAAOY2RzYwADAAEAAQAAANppcHJwAAAAsWlwY28AAAATY29scm5jbHgAAgACAAaAAAAADGNsbGkAywBAAAAAFGlzcGUAAAAAAAAAAgAAAAIAAAAJaXJvdAAAAAAQcGl4aQAAAAADCAgIAAAADnBpeGkAAAAAAQgAAAA3YXV4QwAAAAB1cm46bXBlZzpoZXZjOjIwMTU6YXV4aWQ6MQAAAAAMAAAACE4BpQQAAf5AAAAADGF2MUOBAAwAAAAADGF2MUOBABwAAAAAIWlwbWEAAAAAAAAAAgABBoECAwWIhAACBQMGh4mEAAAAOmlsb2MAAAAARAAAAwABAAAAAQAAAmYAAAApAAIAAAABAAACjwAAAB0AAwAAAAEAAAIYAAAATgAAAAFtZGF0AAAAAAAAAKQAAAAGRXhpZgAATU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAA6ABAAMAAAABAAEAAKACAAQAAAABAAAAAqADAAQAAAABAAAAAgAAAAASAAoMAAAAAAZ//AgQEDQgMhcQAZIACCCCIADb235ba5xLJkSGy4OYkRIACggAAAAABn/8FTIPEAGOACCIArFiH7QUuqOu';
+    });
+    document.documentElement.classList.add('js'); document.documentElement.lang = 'en';
+    /* If the site script never runs, show everything rather than leave it hidden. */
+    setTimeout(function () { if (!window.siteReady) document.documentElement.classList.remove('js'); }, 4000);
+  </script>
+  <script src="assets/js/data.js" defer></script>
+  <script src="assets/js/site.js" defer></script>
+<!-- ============ BACKDROP: the app's page backdrop, as on the home page ============ -->
+<div class="backdrop" aria-hidden="true">
+  <picture><source media="(min-aspect-ratio: 1/1)" type="image/avif" srcset="assets/img/backdrop-wide.avif"><source media="(min-aspect-ratio: 1/1)" srcset="assets/img/backdrop-wide.jpg"><source type="image/avif" srcset="assets/img/backdrop-tall.avif"><img class="backdrop-art" src="assets/img/backdrop-tall.jpg" alt="" decoding="async" onload="this.classList.add('is-in')"></picture>
+  <div class="backdrop-light"></div>
+</div>
+
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="brand" href="index.html" aria-label="Squishrot home">
+      <img class="brand-icon" src="assets/img/icon.png" alt="" width="40" height="40">
+      <img class="brand-word" src="assets/img/logo.png" alt="Squishrot" width="114" height="38">
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#den">Den</a>
+      <a href="index.html#trade">Trade</a>
+      <a href="rarity.html">Rarity</a>
+      <a href="leaderboard.html" aria-current="page">Leaderboard</a>
+      <a href="pro.html">Pro</a>
+      <a href="index.html#faq">FAQ</a>
+    </nav>
+    <a class="jelly-btn jelly-btn--sm" href="#get"><span>Get Squishrot</span><i class="bub" aria-hidden="true"></i><i class="bub" aria-hidden="true"></i></a>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============ LEADERBOARD HERO ============ -->
+<section class="band band--climb pro-hero" id="leaderboard-top" aria-labelledby="leaderboard-title">
+  <div class="wrap split-row">
+    <div class="copy">
+      <p class="eyebrow-pill reveal">Leaderboard</p>
+      <h1 class="split pro-title" id="leaderboard-title">Climb past every <em class="gold-text">collector</em></h1>
+      <p class="lede reveal">Every collector with a Squishrot account has a place on the world leaderboard. Your score grows with every jelly you find, every trade you finish and every day you keep your streak.</p>
+      <div class="pro-cta reveal">
+        <a class="store-badge" href="#get" data-store><svg viewBox="0 0 384 512" aria-hidden="true"><path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg><span><small data-store-top>Coming soon to the</small><b>App Store</b></span></a>
+        <a class="ghost-link" href="#score">How scores work <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3.5 8.5 8 13l4.5-4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a>
+      </div>
+    </div>
+    <div class="phone-slot reveal">
+      <div class="phone" id="phone-leaderboard" role="img" aria-label="The leaderboard in the app: your climb played back, then Nice! and the ranked list with you in it.">
+        <div class="screen">
+          <video class="shot clip" data-clip="leaderboard" poster="assets/clips/leaderboard.jpg" muted playsinline loop preload="none" aria-hidden="true"></video>
+          <i class="finger" aria-hidden="true"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ THE SCORE ============ -->
+<section class="sec" id="score" aria-labelledby="score-title">
+  <div class="wrap center">
+    <p class="eyebrow eyebrow--gold reveal">Your score</p>
+    <h2 class="split" id="score-title">Four things add up</h2>
+  </div>
+  <div class="wrap perk-grid perk-grid--four">
+    <article class="perk reveal"><i class="perk-ico perk-ico--gem"></i><h3>Your jellies</h3><p>Every jelly you own adds points by its finish, from 90 for a Common to 1,800 for a Diamond.</p></article>
+    <article class="perk reveal"><i class="perk-ico perk-ico--xp"></i><h3>Your XP</h3><p>Opening drops, blending and playing earn XP, and all of it counts toward your score.</p></article>
+    <article class="perk reveal"><i class="perk-ico perk-ico--trade"></i><h3>Trades</h3><p>240 points for every trade you complete, whichever side of it you were on.</p></article>
+    <article class="perk reveal"><i class="perk-ico perk-ico--flame"></i><h3>Your streak</h3><p>55 points for each day of your current streak. Miss a day and the streak, with its points, starts over.</p></article>
+  </div>
+  <div class="wrap split-row score-row">
+    <div class="compare-scroll reveal">
+      <table class="compare points">
+        <caption class="sr-only">Leaderboard points for one jelly of each finish</caption>
+        <thead><tr><th scope="col">Finish</th><th scope="col">Points each</th><th scope="col">Worth</th></tr></thead>
+        <tbody>
+          <tr><th scope="row"><span class="chip chip--common">Common</span></th><td><b>90</b></td><td>–</td></tr>
+          <tr><th scope="row"><span class="chip chip--rare">Rare</span></th><td><b>240</b></td><td>2.7 Commons</td></tr>
+          <tr><th scope="row"><span class="chip chip--epic">Epic</span></th><td><b>620</b></td><td>6.9 Commons</td></tr>
+          <tr><th scope="row"><span class="chip chip--sketch">Sketch</span></th><td><b>1,100</b></td><td>12.2 Commons</td></tr>
+          <tr><th scope="row"><span class="chip chip--shiny">Shiny</span></th><td><b>1,400</b></td><td>15.6 Commons</td></tr>
+          <tr><th scope="row"><span class="chip chip--diamond">Diamond</span></th><td><b>1,800</b></td><td>20 Commons</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="score-calc reveal" id="score-calc">
+      <h3>Try it</h3>
+      <p>How many of each do you have?</p>
+      <div class="score-ins">
+        <label class="score-in"><span class="chip chip--common">Common</span><input type="number" inputmode="numeric" min="0" max="99999" value="40" data-points="90" aria-label="Common jellies"></label>
+        <label class="score-in"><span class="chip chip--rare">Rare</span><input type="number" inputmode="numeric" min="0" max="99999" value="15" data-points="240" aria-label="Rare jellies"></label>
+        <label class="score-in"><span class="chip chip--epic">Epic</span><input type="number" inputmode="numeric" min="0" max="99999" value="5" data-points="620" aria-label="Epic jellies"></label>
+        <label class="score-in"><span class="chip chip--sketch">Sketch</span><input type="number" inputmode="numeric" min="0" max="99999" value="1" data-points="1100" aria-label="Sketch jellies"></label>
+        <label class="score-in"><span class="chip chip--shiny">Shiny</span><input type="number" inputmode="numeric" min="0" max="99999" value="1" data-points="1400" aria-label="Shiny jellies"></label>
+        <label class="score-in"><span class="chip chip--diamond">Diamond</span><input type="number" inputmode="numeric" min="0" max="99999" value="0" data-points="1800" aria-label="Diamond jellies"></label>
+        <label class="score-in"><span class="chip chip--plain">Trades</span><input type="number" inputmode="numeric" min="0" max="99999" value="3" data-points="240" aria-label="Completed trades"></label>
+        <label class="score-in"><span class="chip chip--plain">Streak days</span><input type="number" inputmode="numeric" min="0" max="9999" value="7" data-points="55" aria-label="Days in your streak"></label>
+      </div>
+      <p class="score-total" aria-live="polite"><b id="score-total">0</b><span>points, plus your XP</span></p>
+    </div>
+  </div>
+  <p class="wrap table-note center reveal">Blending trades three jellies for one rarer one, so it adds XP and a better jelly but not more jelly points: three Shinies (4,200) become one Diamond (1,800).</p>
+</section>
+
+<!-- ============ SEASONS ============ -->
+<section class="sec" id="seasons" aria-labelledby="seasons-title">
+  <div class="wrap center">
+    <p class="eyebrow eyebrow--purple reveal">Seasons</p>
+    <h2 class="split" id="seasons-title">A cup every month</h2>
+    <p class="lede reveal">Each calendar month is a season. When it ends, everyone on the board gets a cup for the place they finished in, cast in jelly and kept on their profile for good.</p>
+  </div>
+  <ul class="wrap cups">
+    <li class="cup cup--champion reveal"><i class="cup-ico" aria-hidden="true"></i><b>Champion</b><span>1st</span></li>
+    <li class="cup cup--second reveal"><i class="cup-ico" aria-hidden="true"></i><b>Runner-up</b><span>2nd</span></li>
+    <li class="cup cup--third reveal"><i class="cup-ico" aria-hidden="true"></i><b>Third place</b><span>3rd</span></li>
+    <li class="cup cup--ten reveal"><i class="cup-ico" aria-hidden="true"></i><b>Top 10</b><span>4th–10th</span></li>
+    <li class="cup cup--hundred reveal"><i class="cup-ico" aria-hidden="true"></i><b>Top 100</b><span>11th–100th</span></li>
+    <li class="cup cup--finisher reveal"><i class="cup-ico" aria-hidden="true"></i><b>Finisher</b><span>Everyone else on the board</span></li>
+  </ul>
+  <p class="wrap table-note center reveal">Seasons follow UTC months and cups are handed out early on the 1st. Your place for the month is the last one recorded: each night, and whenever you open the leaderboard.</p>
+</section>
+
+<!-- ============ HOW THE BOARD WORKS ============ -->
+<section class="sec pro-how" id="board" aria-labelledby="board-title">
+  <div class="wrap center">
+    <p class="eyebrow eyebrow--sky reveal">How the board works</p>
+    <h2 class="split" id="board-title">Fair, and the same for everyone</h2>
+  </div>
+  <ol class="wrap pro-steps">
+    <li class="reveal"><b>One world board</b><p>Collectors are ranked by score, and your place is the same whoever is looking. Equal scores share a place.</p></li>
+    <li class="reveal"><b>Find it on your profile</b><p>Your place shows on your <strong>Profile</strong>. Tap it to open the leaderboard and see who’s just above you.</p></li>
+    <li class="reveal"><b>Meet the collectors</b><p>Tap anyone on the board to see their profile and showcase, and visit their Den.</p></li>
+    <li class="reveal"><b>Safe by design</b><p>The board shows names, pictures and scores, never where anyone is. Players you block don’t appear for you.</p></li>
+  </ol>
+</section>
+
+<!-- ============ FINAL ============ -->
+<section class="final" id="get" aria-labelledby="get-title">
+  <div class="final-jellies" aria-hidden="true">
+    <img data-jelly="tung-tung-tung-sahur" data-finish="diamond" style="--x:8%;--y:22%;--s:1;--d:0s" alt="">
+    <img data-jelly="cappuccino-assassino" data-finish="shiny" style="--x:84%;--y:16%;--s:1.1;--d:-2s" alt="">
+    <img data-jelly="muscular-orca" data-finish="epic" style="--x:14%;--y:64%;--s:.8;--d:-4s" alt="">
+    <img data-jelly="strawberry-elephant" data-finish="rare" style="--x:80%;--y:60%;--s:.9;--d:-1s" alt="">
+  </div>
+  <div class="wrap center final-copy">
+    <img class="final-icon reveal" src="assets/img/icon.png" alt="" width="132" height="132" loading="lazy">
+    <h2 class="split final-title" id="get-title">Your place is waiting</h2>
+    <p class="lede reveal">Find your first jelly, then watch your name climb.</p>
+    <div class="reveal"><a class="store-badge store-badge--lg" href="#get" data-store><svg viewBox="0 0 384 512" aria-hidden="true"><path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg><span><small data-store-top>Coming soon to the</small><b>App Store</b></span></a></div>
+    <p class="final-meta reveal">Free · iPhone · In-app purchases</p>
+  </div>
+  <footer class="footer">
+    <div class="wrap footer-row">
+      <p>© 2026 Squishrot · Made with a lot of jelly</p>
+      <nav aria-label="Help"><a href="index.html">Home</a><a href="rarity.html">Rarity</a><a href="leaderboard.html">Leaderboard</a><a href="pro.html">Pro</a><a href="support.html">Support</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="mailto:support@squishrot.com">support@squishrot.com</a></nav>
+    </div>
+  </footer>
+</section>
+
+</main>
+
+</body></html>
+<script>
+  /* The score calculator: jelly points by finish, 240 a trade, 55 a streak day. */
+  (function () {
+    function start() {
+      var box = document.getElementById('score-calc');
+      if (!box) return;
+      var ins = box.querySelectorAll('input[data-points]'), total = document.getElementById('score-total');
+      var draw = function () {
+        var sum = 0;
+        ins.forEach(function (i) { var n = Math.max(0, Math.min(+i.max || 99999, Math.floor(+i.value || 0))); sum += n * +i.dataset.points; });
+        total.textContent = sum.toLocaleString('en-US');
+      };
+      ins.forEach(function (i) { i.addEventListener('input', draw); });
+      draw();
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+  })();
+</script>

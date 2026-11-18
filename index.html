@@ -16,12 +16,12 @@
     });
     document.documentElement.classList.add('js'); document.documentElement.lang = 'en';
     /* The opening (the app's first screen) is the first thing on every visit and reload. Only
-       coming back from the site's own Privacy, Terms, Support or Pro page, or going back in history,
+       coming back from the site's own Privacy, Terms, Support, Pro, Rarity or Leaderboard page, or going back in history,
        skips it. (A link to a section plays it too, then scrolls there.) */
     (function () {
       try {
         var ref = document.referrer, fromPage = false, nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
-        try { var from = new URL(ref); fromPage = from.origin === location.origin && /(privacy|terms|support|pro)(\.html)?$/.test(from.pathname); } catch (e) {}
+        try { var from = new URL(ref); fromPage = from.origin === location.origin && /(privacy|terms|support|pro|rarity|leaderboard)(\.html)?$/.test(from.pathname); } catch (e) {}
         if (fromPage || (nav && nav.type === 'back_forward')) return;
         document.documentElement.classList.add('opening-on', 'opening-lock');
         /* The site starts at the top under it, whatever the browser remembers. */
@@ -114,7 +114,8 @@
       <a href="#how">How it works</a>
       <a href="#den">Den</a>
       <a href="#trade">Trade</a>
-      <a href="#jellies">Jellies</a>
+      <a href="rarity.html">Rarity</a>
+      <a href="leaderboard.html">Leaderboard</a>
       <a href="pro.html">Pro</a>
       <a href="#faq">FAQ</a>
     </nav>
@@ -260,6 +261,7 @@
         <li class="reveal">Win a season cup for your profile every month</li>
         <li class="reveal">Tap any collector to see their profile, showcase and Den</li>
       </ul>
+      <p class="page-link reveal"><a class="ghost-link" href="leaderboard.html">How scores and seasons work <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M8.5 3.5 13 8l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a></p>
     </div>
     <div class="phone-slot reveal">
       <div class="phone" id="phone-leaderboard" role="img" aria-label="The leaderboard: the top three stand on the podium with the list below them, then your climb plays back from #26 to #19 and says Ranked up!; tapping Nice! returns to the list.">
@@ -307,6 +309,7 @@
       <h2 class="split" id="jellies-title">28 jellies, six ways to shine</h2>
       <p class="lede reveal">Every jelly comes in all six finishes: Common, amber Rare, cosmic grape Epic, pencil-drawn Sketch, holographic Shiny and cut-crystal Diamond. Rarer finishes earn more in your Den.</p>
       <p class="small-hint reveal">Tap a jelly below to take a closer look. In the app, a Shiny’s foil shifts as you tilt your phone and a Diamond rings when you press it.</p>
+      <p class="page-link reveal"><a class="ghost-link" href="rarity.html">The odds of every finish <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 8h10M8.5 3.5 13 8l-4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></a></p>
     </div>
   </div>
   <div class="marquee" id="marquee" aria-label="All Squishrot jellies">
@@ -424,7 +427,7 @@
   <footer class="footer">
     <div class="wrap footer-row">
       <p>© 2026 Squishrot · Made with a lot of jelly</p>
-      <nav aria-label="Help"><a href="pro.html">Pro</a><a href="support.html">Support</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="mailto:support@squishrot.com">support@squishrot.com</a></nav>
+      <nav aria-label="Help"><a href="rarity.html">Rarity</a><a href="leaderboard.html">Leaderboard</a><a href="pro.html">Pro</a><a href="support.html">Support</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="mailto:support@squishrot.com">support@squishrot.com</a></nav>
     </div>
   </footer>
 </section>
