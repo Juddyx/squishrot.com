@@ -557,6 +557,22 @@ html.pro-intro-on .pro-intro { display: flex; }
 .pi-replay { border: 0; background: none; color: var(--muted); font: inherit; font-weight: 800; cursor: pointer; }
 .pi-replay:hover { color: var(--text); }
 .pi-replay:hover svg { transform: rotate(-40deg); }
+/* Jelly lettering (pro-intro.js `jelly`): each letter is its own gummy sweet, a pale grape jelly
+   (Pro's green for the em words) with a gloss spot near its top, stood on a darker jelly edge.
+   The script springs each one; transform-origin sits on the line so squashes land on it. */
+.jt { display: inline; }
+.jw { display: inline-block; white-space: nowrap; filter: drop-shadow(0 2px 0 rgba(72, 34, 150, .9)) drop-shadow(0 7px 12px rgba(10, 4, 30, .55)); }
+.jl { display: inline-block; transform-origin: 50% 82%; padding: .06em .015em .12em; margin: -.06em -.015em -.12em; color: transparent; text-shadow: none;
+  background: radial-gradient(42% 26% at 38% 24%, rgba(255, 255, 255, .95), rgba(255, 255, 255, 0) 100%), linear-gradient(180deg, #fff 0%, #f1ecff 38%, #c7b6ff 72%, #9a82f5 100%);
+  -webkit-background-clip: text; background-clip: text; will-change: transform; transition: opacity .12s linear; }
+.jw--green { filter: drop-shadow(0 2px 0 rgba(10, 110, 50, .95)) drop-shadow(0 0 14px rgba(74, 222, 128, .45)) drop-shadow(0 7px 12px rgba(10, 4, 30, .5)); }
+.jw--green .jl { background: radial-gradient(42% 26% at 38% 24%, rgba(255, 255, 255, .95), rgba(255, 255, 255, 0) 100%), linear-gradient(180deg, #eafff1 0%, #8ef5b4 34%, #3ddc78 66%, #17a34c 100%); -webkit-background-clip: text; background-clip: text; }
+.pi-perks .jw { filter: drop-shadow(0 1px 0 rgba(72, 34, 150, .9)) drop-shadow(0 4px 6px rgba(10, 4, 30, .5)); }
+.pi-perks .jl { background: radial-gradient(42% 26% at 38% 24%, rgba(255, 255, 255, .9), rgba(255, 255, 255, 0) 100%), linear-gradient(180deg, #fff 0%, #e6e0fa 45%, #b6a6ee 100%); -webkit-background-clip: text; background-clip: text; }
+.pi-go .jw { filter: drop-shadow(0 2px 0 rgba(40, 20, 120, .55)); }
+.pi-go .jl { background: radial-gradient(42% 26% at 38% 24%, #fff, rgba(255, 255, 255, 0) 100%), linear-gradient(180deg, #fff 0%, #fff 50%, #e3dcff 100%); -webkit-background-clip: text; background-clip: text; }
+.pi-title em, .pi-hint em, .pi-unlock em { text-shadow: none; }
+@media (prefers-reduced-motion: reduce) { .jl { will-change: auto; transition: none; } }
 @media (max-height: 640px) { .pi-ball-wrap { width: min(60vw, 230px); } .pi-perks { gap: 12px 8px; } .pi-perk { width: 46px; height: 46px; } }
 @media (prefers-reduced-motion: reduce) {
   .pi-ball, .pi-swirl, .pi-moon, .pi-shadow, .pi-aurora, .pi-crest-glow, .pi-go::after { animation: none !important; }
